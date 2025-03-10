@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import {
-  Container,
+  Box,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Divider,
   Typography,
   Paper,
   Table,
@@ -11,40 +19,64 @@ import {
   TableHead,
   TableRow,
   Button,
-  Box,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogContentText,
   DialogActions,
   Grid,
-  Divider,
-  Chip
+  Chip,
+  Card,
+  CardContent,
+  IconButton
 } from '@mui/material';
+import {
+  DashboardOutlined,
+  PeopleAltOutlined,
+  PendingActionsOutlined,
+  LogoutOutlined
+} from '@mui/icons-material';
+
+const drawerWidth = 240;
 
 const DialogItem = ({ label, value }) => (
-    value && (
-      <Grid item xs={12} sm={6}>
-        <Typography variant="subtitle2" gutterBottom>
-          <strong>{label}:</strong> {value}
-        </Typography>
-      </Grid>
-    )
-  );
+  value && (
+    <Grid item xs={12} sm={6}>
+      <Typography variant="subtitle2" gutterBottom>
+        <strong>{label}:</strong> {value}
+      </Typography>
+    </Grid>
+  )
+);
 
 const SuperAdminDashboard = () => {
+  const [viewMode, setViewMode] = useState('dashboard');
   const [pendingUsers, setPendingUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchPendingUsers();
-  }, []);
+    if (viewMode === 'pending') {
+      fetchPendingUsers();
+    } else if (viewMode === 'all') {
+      fetchAllUsers();
+    }
+  }, [viewMode]);
 
   const fetchPendingUsers = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/auth/pending-users');
       setPendingUsers(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchAllUsers = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/auth/all-users');
+      setAllUsers(response.data);
     } catch (error) {
       console.error(error);
     }
@@ -77,6 +109,11 @@ const SuperAdminDashboard = () => {
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
   };
 
   const renderRoleSpecificFields = (user) => {
@@ -123,144 +160,288 @@ const SuperAdminDashboard = () => {
         );
       default:
         return null;
-    }}
+    }
+  };
 
   return (
-    <Container>
-      <Box sx={{ mt: 4, textAlign: 'center' }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Super Admin Dashboard
-        </Typography>
-        <Typography variant="h5" component="h2" gutterBottom>
-          Pending Users
-        </Typography>
-        <TableContainer component={Paper} elevation={3} sx={{ mt: 3 }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Full Name</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Role</TableCell>
-                <TableCell>Phone Number</TableCell>
-                <TableCell>Actions</TableCell>
-                <TableCell>View Details</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {pendingUsers.map((user) => (
-                <TableRow key={user._id}>
-                  <TableCell>{user.fullName}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.userRole}</TableCell>
-                  <TableCell>{user.phoneNumber}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="contained"
-                      color="success"
-                      sx={{ mr: 1 }}
-                      onClick={() => handleApprove(user._id)}
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="error"
-                      onClick={() => handleRemove(user._id)}
-                    >
-                      Remove
-                    </Button>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outlined"
-                      onClick={() => handleViewDetails(user)}
-                    >
-                      View Details
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-
-      {/* Dialog to show full user details */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="md">
-        <DialogTitle>
-          <Typography variant="h5" component="div">
-            User Details
-            <Chip 
-              label={selectedUser?.userRole} 
-              color="primary" 
-              sx={{ ml: 2, borderRadius: 1 }}
-            />
+    <Box sx={{ display: 'flex' }}>
+      {/* Side Navigation Bar */}
+      <Drawer
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            bgcolor: '#f5f5f5'
+          },
+        }}
+        variant="permanent"
+        anchor="left"
+      >
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Typography variant="h6" color="primary">
+            Admin Portal
           </Typography>
-        </DialogTitle>
-        
-        <DialogContent dividers>
-          <Grid container spacing={3}>
-            {/* Common Fields */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
-                Basic Information
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
+        </Box>
+        <Divider />
+        <List>
+          <ListItem disablePadding>
+            <ListItemButton
+              selected={viewMode === 'dashboard'}
+              onClick={() => setViewMode('dashboard')}
+            >
+              <ListItemIcon>
+                <DashboardOutlined color="action" />
+              </ListItemIcon>
+              <ListItemText primary="Dashboard" />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton
+              selected={viewMode === 'pending'}
+              onClick={() => setViewMode('pending')}
+            >
+              <ListItemIcon>
+                <PendingActionsOutlined color="action" />
+              </ListItemIcon>
+              <ListItemText primary="Pending Users" />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton
+              selected={viewMode === 'all'}
+              onClick={() => setViewMode('all')}
+            >
+              <ListItemIcon>
+                <PeopleAltOutlined color="action" />
+              </ListItemIcon>
+              <ListItemText primary="All Users" />
+            </ListItemButton>
+          </ListItem>
+        </List>
+        <Divider />
+        <List>
+          <ListItem disablePadding>
+            <ListItemButton onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutOutlined color="error" />
+              </ListItemIcon>
+              <ListItemText primary="Logout" primaryTypographyProps={{ color: 'error' }} />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      </Drawer>
+
+      {/* Main Content */}
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        {viewMode === 'dashboard' && (
+          <>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Dashboard
+            </Typography>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <Card elevation={3}>
+                  <CardContent>
+                    <Typography variant="h6" color="textSecondary" gutterBottom>
+                      Pending Users
+                    </Typography>
+                    <Typography variant="h4" color="primary">
+                      {pendingUsers.length}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card elevation={3}>
+                  <CardContent>
+                    <Typography variant="h6" color="textSecondary" gutterBottom>
+                      All Users
+                    </Typography>
+                    <Typography variant="h4" color="primary">
+                      {allUsers.length}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
             </Grid>
-            
-            <DialogItem label="Full Name" value={selectedUser?.fullName} />
-            <DialogItem label="Username" value={selectedUser?.username} />
-            <DialogItem label="Email" value={selectedUser?.email} />
-            <DialogItem label="Phone" value={selectedUser?.phoneNumber} />
-            <DialogItem label="Address" value={selectedUser?.address} />
-            <DialogItem 
-              label="Date of Birth" 
-              value={selectedUser?.dateOfBirth && new Date(selectedUser.dateOfBirth).toLocaleDateString()} 
-            />
+          </>
+        )}
 
-            {/* Role-Specific Fields */}
-            {selectedUser && (
-              <>
-                <Grid item xs={12} sx={{ mt: 2 }}>
-                  <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
-                    Role-Specific Information
-                  </Typography>
-                  <Divider sx={{ mb: 2 }} />
-                </Grid>
-                {renderRoleSpecificFields(selectedUser)}
-              </>
-            )}
+        {viewMode === 'pending' && (
+          <>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Pending Users
+            </Typography>
+            <TableContainer component={Paper} elevation={3}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Full Name</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>Role</TableCell>
+                    <TableCell>Phone Number</TableCell>
+                    <TableCell>Actions</TableCell>
+                    <TableCell>View Details</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {pendingUsers.map((user) => (
+                    <TableRow key={user._id}>
+                      <TableCell>{user.fullName}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.userRole}</TableCell>
+                      <TableCell>{user.phoneNumber}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="contained"
+                          color="success"
+                          sx={{ mr: 1 }}
+                          onClick={() => handleApprove(user._id)}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="error"
+                          onClick={() => handleRemove(user._id)}
+                        >
+                          Remove
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outlined"
+                          onClick={() => handleViewDetails(user)}
+                        >
+                          View Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </>
+        )}
 
-            {/* System Information */}
-            <Grid item xs={12} sx={{ mt: 2 }}>
-              <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
-                System Information
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
+        {viewMode === 'all' && (
+          <>
+            <Typography variant="h4" component="h1" gutterBottom>
+              All Users
+            </Typography>
+            <TableContainer component={Paper} elevation={3}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Full Name</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>Role</TableCell>
+                    <TableCell>Phone Number</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>View Details</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {allUsers.map((user) => (
+                    <TableRow key={user._id}>
+                      <TableCell>{user.fullName}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.userRole}</TableCell>
+                      <TableCell>{user.phoneNumber}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={user.isActive ? 'Active' : 'Inactive'}
+                          color={user.isActive ? 'success' : 'error'}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outlined"
+                          onClick={() => handleViewDetails(user)}
+                        >
+                          View Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </>
+        )}
+
+        {/* Dialog to show full user details */}
+        <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="md">
+          <DialogTitle>
+            <Typography variant="h5" component="div">
+              User Details
+              <Chip
+                label={selectedUser?.userRole}
+                color="primary"
+                sx={{ ml: 2, borderRadius: 1 }}
+              />
+            </Typography>
+          </DialogTitle>
+          <DialogContent dividers>
+            <Grid container spacing={3}>
+              {/* Common Fields */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
+                  Basic Information
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+              </Grid>
+              <DialogItem label="Full Name" value={selectedUser?.fullName} />
+              <DialogItem label="Username" value={selectedUser?.username} />
+              <DialogItem label="Email" value={selectedUser?.email} />
+              <DialogItem label="Phone" value={selectedUser?.phoneNumber} />
+              <DialogItem label="Address" value={selectedUser?.address} />
+              <DialogItem
+                label="Date of Birth"
+                value={selectedUser?.dateOfBirth && new Date(selectedUser.dateOfBirth).toLocaleDateString()}
+              />
+
+              {/* Role-Specific Fields */}
+              {selectedUser && (
+                <>
+                  <Grid item xs={12} sx={{ mt: 2 }}>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
+                      Role-Specific Information
+                    </Typography>
+                    <Divider sx={{ mb: 2 }} />
+                  </Grid>
+                  {renderRoleSpecificFields(selectedUser)}
+                </>
+              )}
+
+              {/* System Information */}
+              <Grid item xs={12} sx={{ mt: 2 }}>
+                <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
+                  System Information
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+              </Grid>
+              <DialogItem
+                label="Request Created"
+                value={selectedUser?.createdAt && new Date(selectedUser.createdAt).toLocaleString()}
+              />
             </Grid>
-            <DialogItem 
-              label="Request Created" 
-              value={selectedUser?.createdAt && new Date(selectedUser.createdAt).toLocaleString()} 
-            />
-            {/* <DialogItem 
-              label="Updated At" 
-              value={selectedUser?.updatedAt && new Date(selectedUser.updatedAt).toLocaleString()} 
-            /> */}
-          </Grid>
-        </DialogContent>
-
-        <DialogActions sx={{ p: 3 }}>
-          <Button 
-            onClick={handleCloseDialog} 
-            variant="outlined"
-            sx={{ borderRadius: 2 }}
-          >
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+          </DialogContent>
+          <DialogActions sx={{ p: 3 }}>
+            <Button
+              onClick={handleCloseDialog}
+              variant="outlined"
+              sx={{ borderRadius: 2 }}
+            >
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </Box>
   );
 };
 
-export default SuperAdminDashboard;
+export default SuperAdminDashboard;  

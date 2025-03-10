@@ -21,13 +21,13 @@ const Login = () => {
     return;
 }
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
       alert('Login successful');
       console.log(response.data.user);
-
+  
       if (response.data.user.isActive === 'true') {
         if (response.data.user.userRole === 'HOD') {
           navigate('/hod-dashboard');
@@ -38,7 +38,12 @@ const Login = () => {
         alert('Need to approve before login');
       }
     } catch (error) {
-      alert('Login failed');
+      // Check if the error response contains a specific message from the backend
+      if (error.response && error.response.data && error.response.data.message) {
+        alert(error.response.data.message); // Display the backend error message
+      } else {
+        alert('An error occurred. Please try again.'); // Generic error message
+      }
       console.error(error);
     }
   };

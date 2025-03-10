@@ -111,6 +111,16 @@ const getPendingUsers = async (req, res) => {
     }
 };
 
+const getAllUsers = async (req, res) => {
+    try {
+        const allUsers = await User.find();  // Fetches all users
+        res.status(200).json(allUsers);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+
 const approveUser = async (req, res) => {
     const { userId } = req.body;
     try {
@@ -121,4 +131,4 @@ const approveUser = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, loginUser, getPendingUsers, approveUser };
+module.exports = { registerUser, loginUser, getPendingUsers, approveUser,getAllUsers };
