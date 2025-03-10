@@ -35,6 +35,7 @@ import {
   PendingActionsOutlined,
   LogoutOutlined
 } from '@mui/icons-material';
+import api from '../api';
 
 const drawerWidth = 240;
 
@@ -62,11 +63,15 @@ const SuperAdminDashboard = () => {
     } else if (viewMode === 'all') {
       fetchAllUsers();
     }
+    else if(viewMode==="dashboard"){
+      fetchPendingUsers();
+      fetchAllUsers();
+    }
   }, [viewMode]);
 
   const fetchPendingUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/auth/pending-users');
+      const response = await api.get('api/auth/pending-users');
       setPendingUsers(response.data);
     } catch (error) {
       console.error(error);
@@ -75,7 +80,7 @@ const SuperAdminDashboard = () => {
 
   const fetchAllUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/auth/all-users');
+      const response = await api.get('api/auth/all-users');
       setAllUsers(response.data);
     } catch (error) {
       console.error(error);
@@ -84,7 +89,7 @@ const SuperAdminDashboard = () => {
 
   const handleApprove = async (userId) => {
     try {
-      await axios.post('http://localhost:5000/api/auth/approve-user', { userId });
+      await api.post('api/auth/approve-user', { userId });
       alert('User approved successfully');
       fetchPendingUsers(); // Refresh the list
     } catch (error) {
@@ -94,7 +99,7 @@ const SuperAdminDashboard = () => {
 
   const handleRemove = async (userId) => {
     try {
-      await axios.post('http://localhost:5000/api/auth/remove-user', { userId });
+      await api.post('api/auth/remove-user', { userId });
       alert('User removed successfully');
       fetchPendingUsers(); // Refresh the list
     } catch (error) {
@@ -113,7 +118,7 @@ const SuperAdminDashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login');
+    navigate('/');
   };
 
   const renderRoleSpecificFields = (user) => {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import api from '../api';
 import {
   Container,
   Typography,
@@ -24,7 +25,7 @@ const Login = () => {
 const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const response = await api.post('api/auth/login', { email, password });
       alert('Login successful');
       console.log(response.data.user);
   
@@ -34,9 +35,7 @@ const handleSubmit = async (e) => {
         } else {
           navigate('/user-dashboard');
         }
-      } else {
-        alert('Need to approve before login');
-      }
+      } 
     } catch (error) {
       // Check if the error response contains a specific message from the backend
       if (error.response && error.response.data && error.response.data.message) {
