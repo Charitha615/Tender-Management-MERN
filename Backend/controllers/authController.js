@@ -25,6 +25,7 @@ const registerUser = async (req, res) => {
         companyAddress,
         supplierType,
         contactPersonName,
+        ministryOfDefenceDocument,
     } = req.body;
 
     try {
@@ -61,6 +62,7 @@ const registerUser = async (req, res) => {
             companyAddress,
             supplierType,
             contactPersonName,
+            ministryOfDefenceDocument,
             isActive: 0,
         });
 

@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema({
   companyAddress: { type: String, default: '' },
   supplierType: { type: String, default: '' },
   contactPersonName: { type: String, default: '' },
+  ministryOfDefenceDocument: { type: String, default: '' },
   isActive: { type: Boolean, default: false },
 
 }, { timestamps: true });

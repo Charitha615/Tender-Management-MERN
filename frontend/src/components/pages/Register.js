@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import api from '../api';
 import {
-  Container,
   Typography,
   TextField,
   Select,
@@ -13,8 +11,8 @@ import {
   Box,
   Paper,
   Link,
-  Grid,
 } from '@mui/material';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -41,6 +39,7 @@ const Register = () => {
     companyAddress: '',
     supplierType: '',
     contactPersonName: '',
+    ministryOfDefenceDocument: '',
   });
 
   const handleChange = (e) => {
@@ -49,17 +48,65 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate password match
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Passwords do not match!',
+      });
       return;
     }
+
     try {
+      // Send registration request
       const response = await api.post('api/auth/register', formData);
-      alert('Registration successful');
-      console.log(response.data);
+
+      // Show success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Registration successful!',
+      }).then(() => {
+        // Reset form after successful registration
+        setFormData({
+          fullName: '',
+          email: '',
+          username: '',
+          password: '',
+          confirmPassword: '',
+          phoneNumber: '',
+          profilePicture: '',
+          address: '',
+          dateOfBirth: '',
+          userRole: '',
+          departmentName: '',
+          facultyName: '',
+          officeLocation: '',
+          employeeId: '',
+          warehouseName: '',
+          warehouseLocation: '',
+          universityName: '',
+          rectorOfficeAddress: '',
+          companyName: '',
+          businessRegistrationNumber: '',
+          companyAddress: '',
+          supplierType: '',
+          contactPersonName: '',
+          ministryOfDefenceDocument: '',
+        });
+      });
+
+      console.log('Registration Response:', response.data);
     } catch (error) {
-      alert('Registration failed');
-      console.error(error);
+      // Show error message
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.message || 'Registration failed. Please try again.',
+      });
+      console.error('Registration Error:', error);
     }
   };
 
@@ -214,107 +261,6 @@ const Register = () => {
             </FormControl>
 
             {/* Role-Specific Fields */}
-            {formData.userRole === 'HOD' && (
-              <>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Department Name"
-                  name="departmentName"
-                  value={formData.departmentName}
-                  onChange={handleChange}
-                  required
-                />
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Faculty Name"
-                  name="facultyName"
-                  value={formData.facultyName}
-                  onChange={handleChange}
-                  required
-                />
-              </>
-            )}
-
-            {formData.userRole === 'Logistics Officer' && (
-              <>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Office Location"
-                  name="officeLocation"
-                  value={formData.officeLocation}
-                  onChange={handleChange}
-                  required
-                />
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Employee ID"
-                  name="employeeId"
-                  value={formData.employeeId}
-                  onChange={handleChange}
-                  required
-                />
-              </>
-            )}
-
-            {formData.userRole === 'Warehouse Officer' && (
-              <>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Warehouse Name"
-                  name="warehouseName"
-                  value={formData.warehouseName}
-                  onChange={handleChange}
-                  required
-                />
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Warehouse Location"
-                  name="warehouseLocation"
-                  value={formData.warehouseLocation}
-                  onChange={handleChange}
-                  required
-                />
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Employee ID"
-                  name="employeeId"
-                  value={formData.employeeId}
-                  onChange={handleChange}
-                  required
-                />
-              </>
-            )}
-
-            {formData.userRole === 'Rector' && (
-              <>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="University Name"
-                  name="universityName"
-                  value={formData.universityName}
-                  onChange={handleChange}
-                  required
-                />
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Rector’s Office Address"
-                  name="rectorOfficeAddress"
-                  value={formData.rectorOfficeAddress}
-                  onChange={handleChange}
-                  required
-                />
-              </>
-            )}
-
             {formData.userRole === 'Supplier' && (
               <>
                 <TextField
@@ -367,46 +313,28 @@ const Register = () => {
                   onChange={handleChange}
                   required
                 />
-              </>
-            )}
-
-            {formData.userRole === 'Procurement Officer' && (
-              <>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Office Location"
-                  name="officeLocation"
-                  value={formData.officeLocation}
-                  onChange={handleChange}
-                  required
-                />
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Employee ID"
-                  name="employeeId"
-                  value={formData.employeeId}
-                  onChange={handleChange}
+                {/* Ministry of Defence Document Upload */}
+                <label>Ministry of Defence Register Document Upload *</label>
+                <input
+                  style={{ marginTop: 20, display: 'block', width: '100%' }}
+                  type="file"
+                  name="ministryOfDefenceDocument"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData({ ...formData, ministryOfDefenceDocument: reader.result });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
                   required
                 />
               </>
             )}
 
-            {/* <Button
-              type="submit"
-              fullWidth
-              sx={{
-                mt: 2,
-                mb: 2,
-                py: 1.5,
-                background: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)',
-                '&:hover': { background: 'linear-gradient(135deg, #2575fc 0%, #6a11cb 100%)' },
-              }}
-            >
-              Register
-            </Button> */}
-
+            {/* Submit Button */}
             <Button
               type="submit"
               fullWidth
@@ -422,6 +350,7 @@ const Register = () => {
               Register
             </Button>
 
+            {/* Login Link */}
             <Box sx={{ mt: 2, textAlign: 'center' }}>
               <Typography variant="body2">
                 Have an account?{' '}

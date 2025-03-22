@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 import {
-  Container,
+  Box,
   Typography,
   TextField,
   Button,
   Paper,
-  Box,
   Link,
 } from '@mui/material';
 
@@ -17,33 +16,69 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  if (email === 'admin' && password === 'admin') {
-    navigate('/super-admin-dashboard');
-    return;
-}
-
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Hardcoded admin login for testing
+    if (email === 'admin' && password === 'admin') {
+      navigate('/super-admin-dashboard');
+      return;
+    }
+
     try {
       const response = await api.post('api/auth/login', { email, password });
-      alert('Login successful');
-      console.log(response.data.user);
-  
-      if (response.data.user.isActive === 'true') {
-        if (response.data.user.userRole === 'HOD') {
-          navigate('/hod-dashboard');
-        } else {
-          navigate('/user-dashboard');
+
+      // Show success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Login Successful',
+        text: 'You have successfully logged in!',
+      });
+
+    
+
+      // Redirect based on user role
+      if (response.data.user.isActive) {
+          // Store user data in local storage
+      localStorage.setItem('userId', response.data.user.id);
+      localStorage.setItem('userRole', response.data.user.userRole);
+        switch (response.data.user.userRole) {
+          case 'HOD':
+            navigate('/hod-dashboard');
+            break;
+          case 'Logistics Officer':
+            navigate('/logistics-officer-dashboard');
+            break;
+          case 'Warehouse Officer':
+            navigate('/warehouse-officer-dashboard');
+            break;
+          case 'Rector':
+            navigate('/rector-dashboard');
+            break;
+          case 'Supplier':
+            navigate('/supplier-dashboard');
+            break;
+          case 'Procurement Officer':
+            navigate('/procurement-officer-dashboard');
+            break;
+          default:
+            navigate('/user-dashboard');
         }
-      } 
-    } catch (error) {
-      // Check if the error response contains a specific message from the backend
-      if (error.response && error.response.data && error.response.data.message) {
-        alert(error.response.data.message); // Display the backend error message
       } else {
-        alert('An error occurred. Please try again.'); // Generic error message
+        Swal.fire({
+          icon: 'warning',
+          title: 'Account Inactive',
+          text: 'Your account is not active. Please contact the administrator.',
+        });
       }
-      console.error(error);
+    } catch (error) {
+      // Show error message
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: error.response?.data?.message || 'An error occurred. Please try again.',
+      });
+      console.error('Login Error:', error);
     }
   };
 
