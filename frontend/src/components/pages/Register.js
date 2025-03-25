@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import api from '../api';
+import { useNavigate } from 'react-router-dom';
 import {
   Typography,
   TextField,
@@ -41,6 +42,7 @@ const Register = () => {
     contactPersonName: '',
     ministryOfDefenceDocument: '',
   });
+    const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -96,6 +98,8 @@ const Register = () => {
           contactPersonName: '',
           ministryOfDefenceDocument: '',
         });
+
+        navigate('/');
       });
 
       console.log('Registration Response:', response.data);
