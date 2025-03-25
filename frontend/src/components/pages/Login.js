@@ -16,14 +16,16 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
+  if (email === 'admin' && password === 'admin') {
+    navigate('/super-admin-dashboard');
+    return;
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Hardcoded admin login for testing
-    if (email === 'admin' && password === 'admin') {
-      navigate('/super-admin-dashboard');
-      return;
-    }
+  
 
     try {
       const response = await api.post('api/auth/login', { email, password });
@@ -40,7 +42,7 @@ const Login = () => {
       // Redirect based on user role
       if (response.data.user.isActive) {
           // Store user data in local storage
-      localStorage.setItem('userId', response.data.user.id);
+      localStorage.setItem('userId', response.data.user._id);
       localStorage.setItem('userRole', response.data.user.userRole);
         switch (response.data.user.userRole) {
           case 'HOD':

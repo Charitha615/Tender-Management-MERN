@@ -23,9 +23,13 @@ app.get('/', (req, res) => {
 });  
 
 const authRoutes = require('./routes/authRoutes');
+const requestRoutes = require('./routes/requestRoutes');
+const logisticsRoutes = require('./routes/logisticsRoutes');
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/requests', requestRoutes);
+app.use('/api/logistics', logisticsRoutes);
 
 // Start server
 app.listen(PORT, () => {

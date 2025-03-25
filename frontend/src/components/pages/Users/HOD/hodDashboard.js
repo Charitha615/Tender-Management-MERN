@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../../../api';
 import logo from '../../../assets/img/navlogo.png';
-import background from '../../../assets/img/background.jpg'; // Add a background image
+import background from '../../../assets/img/background.jpg';
 import {
   AppBar,
   Toolbar,
@@ -27,6 +28,8 @@ const HODDashboard = () => {
     damagedItemCount: '',
     newItemRequestCount: '',
     note: '',
+    requestStage: 'Logistics Officer',
+    isApproved: false
   });
 
   const handleChange = (e) => {
@@ -34,17 +37,24 @@ const HODDashboard = () => {
     setRequestData({ ...requestData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleNumberChange = (e) => {
+    const { name, value } = e.target;
+    setRequestData({ ...requestData, [name]: parseInt(value) || 0 });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validation
     if (
       !requestData.category ||
       !requestData.subCategory ||
       !requestData.title ||
       !requestData.reason ||
       !requestData.colorPickup ||
-      !requestData.currentItemCount ||
-      !requestData.damagedItemCount ||
-      !requestData.newItemRequestCount
+      requestData.currentItemCount === '' ||
+      requestData.damagedItemCount === '' ||
+      requestData.newItemRequestCount === ''
     ) {
       Swal.fire({
         icon: 'error',
@@ -53,35 +63,69 @@ const HODDashboard = () => {
       });
       return;
     }
-    const newRequest = {
-      ...requestData,
-      id: Date.now(),
-      status: 'Pending',
-    };
-    const existingRequests = JSON.parse(localStorage.getItem('requests')) || [];
-    localStorage.setItem('requests', JSON.stringify([...existingRequests, newRequest]));
-    Swal.fire({
-      icon: 'success',
-      title: 'Success',
-      text: 'Request submitted successfully!',
-    });
-    setRequestData({
-      category: '',
-      subCategory: '',
-      title: '',
-      reason: '',
-      colorPickup: '',
-      currentItemCount: '',
-      damagedItemCount: '',
-      newItemRequestCount: '',
-      note: '',
-    });
+
+    try {
+      // Get user info from localStorage
+      const userId = localStorage.getItem('userId');
+      const userRole = localStorage.getItem('userRole');
+
+      if (!userId || !userRole) {
+        throw new Error('User information not found. Please login again.');
+      }
+
+      // Prepare the request payload
+      const payload = {
+        ...requestData,
+        requestedUserID: userId,
+        requestedUserRole: userRole,
+        HODisApproved: true,
+        HODcreatedAt: Date.now(),
+        HODUserID: userId,
+        currentItemCount: parseInt(requestData.currentItemCount),
+        damagedItemCount: parseInt(requestData.damagedItemCount),
+        newItemRequestCount: parseInt(requestData.newItemRequestCount)
+      };
+
+      // Submit to API
+      const response = await api.post('api/requests', payload);
+
+      console.log("response", response);
+
+      // Show success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Request submitted successfully!',
+      });
+
+      // Reset form
+      setRequestData({
+        category: '',
+        subCategory: '',
+        title: '',
+        reason: '',
+        colorPickup: '',
+        currentItemCount: '',
+        damagedItemCount: '',
+        newItemRequestCount: '',
+        note: '',
+        requestStage: 'HOD',
+        isApproved: false
+      });
+
+    } catch (error) {
+      console.error('Request submission failed:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Submission Failed',
+        text: error.response?.data?.message || error.message || 'Failed to submit request',
+      });
+    }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userRole');
-    navigate('/login');
+    localStorage.clear();
+    navigate('/');
   };
 
   return (
@@ -90,7 +134,7 @@ const HODDashboard = () => {
         backgroundImage: `url(${background})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        height: '100vh',
+        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -111,51 +155,133 @@ const HODDashboard = () => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          height: '100%',
+          py: 4,
+          flexGrow: 1,
         }}
       >
         <Paper
           elevation={3}
           sx={{
             p: 4,
-            width: '50%',
-            backdropFilter: 'blur(100px)',
+            width: '100%',
+            maxWidth: '800px',
+            backdropFilter: 'blur(80px)',
             backgroundColor: 'rgba(255, 255, 255, 0.2)',
             borderRadius: 3,
           }}
         >
-          <Typography variant="h5" gutterBottom>Request Items</Typography>
+          <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>Request Items</Typography>
           <Box component="form" onSubmit={handleSubmit}>
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Category" name="category" value={requestData.category} onChange={handleChange} required />
+                <TextField
+                  fullWidth
+                  label="Category"
+                  name="category"
+                  value={requestData.category}
+                  onChange={handleChange}
+                  required
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Sub Category" name="subCategory" value={requestData.subCategory} onChange={handleChange} required />
+                <TextField
+                  fullWidth
+                  label="Sub Category"
+                  name="subCategory"
+                  value={requestData.subCategory}
+                  onChange={handleChange}
+                  required
+                />
               </Grid>
               <Grid item xs={12}>
-                <TextField fullWidth label="Title" name="title" value={requestData.title} onChange={handleChange} required />
+                <TextField
+                  fullWidth
+                  label="Title"
+                  name="title"
+                  value={requestData.title}
+                  onChange={handleChange}
+                  required
+                />
               </Grid>
               <Grid item xs={12}>
-                <TextField fullWidth label="Reason" name="reason" value={requestData.reason} onChange={handleChange} required />
+                <TextField
+                  fullWidth
+                  label="Reason"
+                  name="reason"
+                  value={requestData.reason}
+                  onChange={handleChange}
+                  required
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Color Pickup" name="colorPickup" value={requestData.colorPickup} onChange={handleChange} required />
+                <TextField
+                  fullWidth
+                  label="Color Pickup"
+                  name="colorPickup"
+                  value={requestData.colorPickup}
+                  onChange={handleChange}
+                  required
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Current Item Count" name="currentItemCount" type="number" value={requestData.currentItemCount} onChange={handleChange} required />
+                <TextField
+                  fullWidth
+                  label="Current Item Count"
+                  name="currentItemCount"
+                  type="number"
+                  value={requestData.currentItemCount}
+                  onChange={handleNumberChange}
+                  inputProps={{ min: 0 }}
+                  required
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Damaged Item Count" name="damagedItemCount" type="number" value={requestData.damagedItemCount} onChange={handleChange} required />
+                <TextField
+                  fullWidth
+                  label="Damaged Item Count"
+                  name="damagedItemCount"
+                  type="number"
+                  value={requestData.damagedItemCount}
+                  onChange={handleNumberChange}
+                  inputProps={{ min: 0 }}
+                  required
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="New Item Request Count" name="newItemRequestCount" type="number" value={requestData.newItemRequestCount} onChange={handleChange} required />
+                <TextField
+                  fullWidth
+                  label="New Item Request Count"
+                  name="newItemRequestCount"
+                  type="number"
+                  value={requestData.newItemRequestCount}
+                  onChange={handleNumberChange}
+                  inputProps={{ min: 0 }}
+                  required
+                />
               </Grid>
               <Grid item xs={12}>
-                <TextField fullWidth label="Note" name="note" value={requestData.note} onChange={handleChange} multiline rows={4} />
+                <TextField
+                  fullWidth
+                  label="Note"
+                  name="note"
+                  value={requestData.note}
+                  onChange={handleChange}
+                  multiline
+                  rows={4}
+                />
               </Grid>
               <Grid item xs={12}>
-                <Button type="submit" variant="contained" style={{ background: "#253B80" }}>Submit Request</Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  size="large"
+                  sx={{
+                    backgroundColor: '#253B80',
+                    '&:hover': { backgroundColor: '#1a2d5a' }
+                  }}
+                >
+                  Submit Request
+                </Button>
               </Grid>
             </Grid>
           </Box>

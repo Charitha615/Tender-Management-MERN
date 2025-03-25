@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -27,7 +26,6 @@ import {
   Chip,
   Card,
   CardContent,
-  IconButton
 } from '@mui/material';
 import {
   DashboardOutlined,
