@@ -139,7 +139,10 @@ const HODDashboard = () => {
         flexDirection: 'column',
       }}
     >
-      <AppBar position="static" sx={{ backgroundColor: '#253B80' }}>
+      <AppBar position="static" sx={{ 
+              background: 'linear-gradient(135deg, #253B80 0%, #1E88E5 100%)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+            }}>
         <Toolbar>
           <img src={logo} alt="Logo" style={{ height: 50 }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}></Typography>
@@ -165,8 +168,7 @@ const HODDashboard = () => {
             p: 4,
             width: '100%',
             maxWidth: '800px',
-            backdropFilter: 'blur(80px)',
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: 'rgba(255, 255, 255, 0.85)',
             borderRadius: 3,
           }}
         >

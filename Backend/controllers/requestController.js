@@ -269,15 +269,37 @@ exports.rejectRequest = async (req, res) => {
   }
 };
 
-// Get all requests by logisticsUserID
+// Get all requests by logisticsUserID with user details
+// Get all requests by logisticsUserID with user details
 exports.getRequestsByLogisticsUser = async (req, res) => {
   try {
     const { LogisticsUserID } = req.params;
     console.log('LogisticsUserID:', LogisticsUserID); // Debug log
-    const requests = await Request.find({ LogisticsUserID:LogisticsUserID })
-      .sort({ createdAt: -1 }); // Sort by newest first
     
-    res.json(requests);
+    const requests = await Request.find({ LogisticsUserID: LogisticsUserID })
+      .sort({ createdAt: -1 }) // Sort by newest first
+      .lean(); // Convert Mongoose documents to plain objects
+    
+    // Fetch user details for each request
+    const requestsWithUserDetails = await Promise.all(
+      requests.map(async (request) => {
+        const updatedRequest = { ...request };
+        
+        if (request.HODUserID) {
+          const hodUser = await User.findById(request.HODUserID).select('fullName email');
+          updatedRequest.HODUser = hodUser; // Attach HOD user details
+        }
+        
+        if (request.LogisticsUserID) {
+          const logisticsUser = await User.findById(request.LogisticsUserID).select('fullName email');
+          updatedRequest.LogisticsUser = logisticsUser; // Attach Logistics user details
+        }
+        
+        return updatedRequest;
+      })
+    );
+
+    res.json(requestsWithUserDetails);
   } catch (error) {
     res.status(500).json({ 
       message: error.message || 'Error fetching requests' 

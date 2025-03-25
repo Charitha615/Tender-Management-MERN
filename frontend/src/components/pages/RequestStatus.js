@@ -92,7 +92,10 @@ const RequestStatus = () => {
 
   return (
     <Box sx={{ flexGrow: 1, minHeight: '100vh', backgroundColor: '#f5f7fa' }}>
-      <AppBar position="static" sx={{ backgroundColor: '#253B80' }}>
+      <AppBar position="static" sx={{ 
+              background: 'linear-gradient(135deg, #253B80 0%, #1E88E5 100%)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+            }}>
         <Toolbar>
           <img src={logo} alt="Logo" style={{ height: 50 }} />
           <Box sx={{ flexGrow: 1 }} />
