@@ -50,10 +50,41 @@ exports.getAllRequests = async (req, res) => {
 exports.getRequestsByUser = async (req, res) => {
   try {
     const requests = await Request.find({ requestedUserID: req.params.userId });
+
+    // Collect all user IDs to fetch in one batch
+    const userIds = new Set();
+    requests.forEach((request) => {
+      if (request.HODUserID) userIds.add(request.HODUserID);
+      if (request.LogisticsUserID) userIds.add(request.LogisticsUserID);
+      if (request.RectorUserID) userIds.add(request.RectorUserID);
+      if (request.ProcurementUserID) userIds.add(request.ProcurementUserID);
+    });
+
+    // Fetch all users at once
+    const users = await User.find({ _id: { $in: Array.from(userIds) } }).select('fullName email');
+
+    // Create a mapping of user IDs to user details
+    const userMap = {};
+    users.forEach((user) => {
+      userMap[user._id.toString()] = user;
+    });
+
+    // Map requests with user details
+    const requestsWithUserDetails = requests.map((request) => {
+      const updatedRequest = request.toObject(); // Convert Mongoose document to plain object
+
+      if (request.HODUserID) updatedRequest.HODUser = userMap[request.HODUserID.toString()];
+      if (request.LogisticsUserID) updatedRequest.LogisticsUser = userMap[request.LogisticsUserID.toString()];
+      if (request.RectorUserID) updatedRequest.RectorUser = userMap[request.RectorUserID.toString()];
+      if (request.ProcurementUserID) updatedRequest.ProcurementUser = userMap[request.ProcurementUserID.toString()];
+
+      return updatedRequest;
+    });
+
     res.json({
       success: true,
       count: requests.length,
-      data: requests
+      data: requestsWithUserDetails, // Send the updated list
     });
   } catch (error) {
     res.status(500).json({
@@ -63,6 +94,8 @@ exports.getRequestsByUser = async (req, res) => {
     });
   }
 };
+
+
 
 // Get a single request by ID
 exports.getRequestById = async (req, res) => {
@@ -228,7 +261,7 @@ exports.getApprovedRequests = async (req, res) => {
 exports.approveRequest = async (req, res) => {
   try {
     console.log('Incoming body:', req.body); // Debug log
-    
+
     const request = await Request.findByIdAndUpdate(
       req.params.id,
       {
@@ -241,7 +274,7 @@ exports.approveRequest = async (req, res) => {
       },
       { new: true, runValidators: true } // Added runValidators
     );
-    
+
     console.log('Updated request:', request); // Debug log
     res.json(request);
   } catch (error) {
@@ -258,8 +291,8 @@ exports.rejectRequest = async (req, res) => {
       {
         isApproved: null,
         LogisticsisApproved: false,
-        LogisticscreatedAt:Date.now(),
-        LogisticsUserID:req.body.logisticsUserID,
+        LogisticscreatedAt: Date.now(),
+        LogisticsUserID: req.body.logisticsUserID,
         requestStage: 'Rejected Logistics Officer',
         note: req.body.reason || 'Rejected by Logistics Officer',
         updatedAt: Date.now()
@@ -277,34 +310,45 @@ exports.getRequestsByLogisticsUser = async (req, res) => {
   try {
     const { LogisticsUserID } = req.params;
     console.log('LogisticsUserID:', LogisticsUserID); // Debug log
-    
+
     const requests = await Request.find({ LogisticsUserID: LogisticsUserID })
       .sort({ createdAt: -1 }) // Sort by newest first
       .lean(); // Convert Mongoose documents to plain objects
-    
+
     // Fetch user details for each request
     const requestsWithUserDetails = await Promise.all(
       requests.map(async (request) => {
         const updatedRequest = { ...request };
-        
+
         if (request.HODUserID) {
           const hodUser = await User.findById(request.HODUserID).select('fullName email');
           updatedRequest.HODUser = hodUser; // Attach HOD user details
         }
-        
+
         if (request.LogisticsUserID) {
           const logisticsUser = await User.findById(request.LogisticsUserID).select('fullName email');
           updatedRequest.LogisticsUser = logisticsUser; // Attach Logistics user details
         }
-        
+
+        if (request.RectorUserID) {
+          const RectorUser = await User.findById(request.RectorUserID).select('fullName email');
+          updatedRequest.RectorUser = RectorUser; // Attach Rector user details
+        }
+
+
+        if (request.ProcurementUserID) {
+          const ProcurementUser = await User.findById(request.ProcurementUserID).select('fullName email');
+          updatedRequest.ProcurementUser = ProcurementUser; // Attach Procurement User user details
+        }
+
         return updatedRequest;
       })
     );
 
     res.json(requestsWithUserDetails);
   } catch (error) {
-    res.status(500).json({ 
-      message: error.message || 'Error fetching requests' 
+    res.status(500).json({
+      message: error.message || 'Error fetching requests'
     });
   }
 };
@@ -319,17 +363,28 @@ exports.getRectorRequests = async (req, res) => {
     const requestsWithUserDetails = await Promise.all(
       requests.map(async (request) => {
         const updatedRequest = { ...request };
-        
+
         if (request.HODUserID) {
           const hodUser = await User.findById(request.HODUserID).select('fullName email');
           updatedRequest.HODUser = hodUser; // Attach HOD user details
         }
-        
+
         if (request.LogisticsUserID) {
           const logisticsUser = await User.findById(request.LogisticsUserID).select('fullName email');
           updatedRequest.LogisticsUser = logisticsUser; // Attach Logistics user details
         }
-        
+
+        if (request.RectorUserID) {
+          const RectorUser = await User.findById(request.RectorUserID).select('fullName email');
+          updatedRequest.RectorUser = RectorUser; // Attach Rector user details
+        }
+
+
+        if (request.ProcurementUserID) {
+          const ProcurementUser = await User.findById(request.ProcurementUserID).select('fullName email');
+          updatedRequest.ProcurementUser = ProcurementUser; // Attach Procurement User user details
+        }
+
         return updatedRequest;
       })
     );
@@ -343,7 +398,7 @@ exports.getRectorRequests = async (req, res) => {
 exports.approveRequestRector = async (req, res) => {
   try {
     console.log('Incoming body:', req.body); // Debug log
-    
+
     const request = await Request.findByIdAndUpdate(
       req.params.id,
       {
@@ -356,7 +411,7 @@ exports.approveRequestRector = async (req, res) => {
       },
       { new: true, runValidators: true } // Added runValidators
     );
-    
+
     console.log('Updated request:', request); // Debug log
     res.json(request);
   } catch (error) {
@@ -370,15 +425,45 @@ exports.getApprovedRequestsRector = async (req, res) => {
   try {
     const userId = req.params.userId;
     console.log('userId:', userId);
+    
     const requests = await Request.find({
       RectorUserID: userId,
       RectorisApproved: true
     });
-    res.json(requests);
+
+    // Populate user details for each request
+    const updatedRequests = await Promise.all(requests.map(async (request) => {
+      const updatedRequest = request.toObject(); // Convert Mongoose document to plain object
+
+      if (request.HODUserID) {
+        const hodUser = await User.findById(request.HODUserID).select('fullName email');
+        updatedRequest.HODUser = hodUser; // Attach HOD user details
+      }
+
+      if (request.LogisticsUserID) {
+        const logisticsUser = await User.findById(request.LogisticsUserID).select('fullName email');
+        updatedRequest.LogisticsUser = logisticsUser; // Attach Logistics user details
+      }
+
+      if (request.RectorUserID) {
+        const rectorUser = await User.findById(request.RectorUserID).select('fullName email');
+        updatedRequest.RectorUser = rectorUser; // Attach Rector user details
+      }
+
+      if (request.ProcurementUserID) {
+        const procurementUser = await User.findById(request.ProcurementUserID).select('fullName email');
+        updatedRequest.ProcurementUser = procurementUser; // Attach Procurement User details
+      }
+
+      return updatedRequest;
+    }));
+
+    res.json(updatedRequests);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 exports.getRejectedRequestsRector = async (req, res) => {
   try {
@@ -386,12 +471,12 @@ exports.getRejectedRequestsRector = async (req, res) => {
     console.log('userId:', userId);
     const requests = await Request.find({
       RectorUserID: userId,
-      requestStage: 'Rejected Rector',  
+      requestStage: 'Rejected Rector',
       RectorisApproved: false
     });
     res.json(requests);
   } catch (error) {
-    res.status(500).json({ message: error.message });  
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -402,8 +487,8 @@ exports.rejectRequestRector = async (req, res) => {
       {
         isApproved: null,
         RectorisApproved: false,
-        RectorcreatedAt:Date.now(),
-        RectorUserID:req.body.rectorUserID,
+        RectorcreatedAt: Date.now(),
+        RectorUserID: req.body.rectorUserID,
         requestStage: 'Rejected Rector',
         note: req.body.rectorRejectionReason || 'Rejected by Rector',
         updatedAt: Date.now()
