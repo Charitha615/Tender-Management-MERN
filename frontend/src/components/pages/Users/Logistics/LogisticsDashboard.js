@@ -702,7 +702,7 @@ const LogisticsDashboard = () => {
                   <Paper elevation={0} sx={{ p: 2, borderRadius: 2, height: '100%' }}>
                     <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'primary.main' }}>
                       <ShippingIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
-                      Personnel Information
+                      Approval Flow
                     </Typography>
 
                     <Box sx={{ mb: 3 }}>
@@ -749,6 +749,58 @@ const LogisticsDashboard = () => {
                             </Typography>
                             <Typography variant="caption" display="block">
                               ID: {selectedRequest.LogisticsUser._id}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    )}
+
+                    {selectedRequest.RectorUser && (
+                      <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+                          Rector
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Avatar sx={{
+                            mr: 2,
+                            bgcolor: 'primary.main',
+                            background: 'linear-gradient(45deg,rgb(11, 207, 43) 30%,rgb(9, 129, 25) 90%)'
+                          }}>
+                            {selectedRequest.RectorUser.fullName.charAt(0)}
+                          </Avatar>
+                          <Box>
+                            <Typography>{selectedRequest.RectorUser.fullName}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {selectedRequest.RectorUser.email}
+                            </Typography>
+                            <Typography variant="caption" display="block">
+                              ID: {selectedRequest.RectorUser._id}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    )}
+
+                    {selectedRequest.ProcurementUser && (
+                      <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+                          Procurement Officer
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Avatar sx={{
+                            mr: 2,
+                            bgcolor: 'primary.main',
+                            background: 'linear-gradient(45deg,rgb(218, 20, 69) 30%,rgb(226, 7, 36) 90%)'
+                          }}>
+                            {selectedRequest.ProcurementUser.fullName.charAt(0)}
+                          </Avatar>
+                          <Box>
+                            <Typography>{selectedRequest.ProcurementUser.fullName}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {selectedRequest.ProcurementUser.email}
+                            </Typography>
+                            <Typography variant="caption" display="block">
+                              ID: {selectedRequest.ProcurementUser._id}
                             </Typography>
                           </Box>
                         </Box>

@@ -766,7 +766,7 @@ const RectorDashboard = () => {
 
                     <Box sx={{ mb: 3 }}>
                       <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        HOD Approval
+                        HOD
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <Avatar sx={{
@@ -781,8 +781,8 @@ const RectorDashboard = () => {
                             {selectedRequest.HODUser?.email || ''}
                           </Typography>
                           <Typography variant="caption" display="block">
-                            {selectedRequest.HODIsApproved ?
-                              `Approved on ${new Date(selectedRequest.HODApprovalDate).toLocaleString()}` :
+                            {selectedRequest.HODcreatedAt ?
+                              `Requested on ${new Date(selectedRequest.HODcreatedAt).toLocaleString()}` :
                               'Pending approval'}
                           </Typography>
                         </Box>
@@ -792,7 +792,7 @@ const RectorDashboard = () => {
                     {selectedRequest.LogisticsUser && (
                       <Box sx={{ mb: 3 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                          Logistics Approval
+                          Logistics
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <Avatar sx={{
@@ -807,8 +807,63 @@ const RectorDashboard = () => {
                               {selectedRequest.LogisticsUser.email}
                             </Typography>
                             <Typography variant="caption" display="block">
-                              {selectedRequest.logisticsIsApproved ?
-                                `Approved on ${new Date(selectedRequest.logisticsApprovalDate).toLocaleString()}` :
+                              {selectedRequest.LogisticscreatedAt ?
+                                `Approved on ${new Date(selectedRequest.LogisticscreatedAt).toLocaleString()}` :
+                                'Pending approval'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    )}
+
+
+                    {selectedRequest.RectorUser && (
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+                          Rector
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Avatar sx={{
+                            mr: 2,
+                            background: 'linear-gradient(135deg, #6A1B9A 0%, #9C27B0 100%)',
+                          }}>
+                            {selectedRequest.RectorUser.fullName.charAt(0)}
+                          </Avatar>
+                          <Box>
+                            <Typography>{selectedRequest.RectorUser.fullName}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {selectedRequest.RectorUser.email}
+                            </Typography>
+                            <Typography variant="caption" display="block">
+                              {selectedRequest.RectorcreatedAt ?
+                                `Approved on ${new Date(selectedRequest.RectorcreatedAt).toLocaleString()}` :
+                                'Pending approval'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    )}
+
+                    {selectedRequest.ProcurementUser && (
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+                        Procurement Officer
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Avatar sx={{
+                            mr: 2,
+                            background: 'linear-gradient(45deg,rgb(231, 83, 15) 30%,rgb(199, 124, 11) 90%)'
+                          }}>
+                            {selectedRequest.ProcurementUser.fullName.charAt(0)}
+                          </Avatar>
+                          <Box>
+                            <Typography>{selectedRequest.ProcurementUser.fullName}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {selectedRequest.ProcurementUser.email}
+                            </Typography>
+                            <Typography variant="caption" display="block">
+                              {selectedRequest.ProcurementcreatedAt ?
+                                `Approved on ${new Date(selectedRequest.ProcurementcreatedAt).toLocaleString()}` :
                                 'Pending approval'}
                             </Typography>
                           </Box>

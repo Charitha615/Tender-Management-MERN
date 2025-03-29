@@ -4,7 +4,7 @@ import Login from './components/pages/Login';
 import Register from './components/pages/Register';
 import SuperAdminDashboard from './components/pages/SuperAdminDashboard';
 import HODDashboard from './components/pages/Users/HOD/hodDashboard';
-import RequestStatus from './components/pages/RequestStatus';
+import RequestStatus from './components/pages/Users/HOD/RequestStatus';
 import LogisticsDashboard from './components/pages/Users/Logistics/LogisticsDashboard';
 import LogisticsFeatures from './components/pages/Users/Logistics/LogisticsFeatures';
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api';
+import api from '../../../api';
 import Swal from 'sweetalert2';
-import logo from '../assets/img/navlogo.png';
+import logo from '../../../assets/img/navlogo.png';
 import {
   AppBar,
   Toolbar,
@@ -26,7 +26,10 @@ import {
   DialogActions,
   Chip,
   Divider,
-  Paper
+  Paper,
+  Stepper,
+  Step,
+  StepLabel
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import CloseIcon from '@mui/icons-material/Close';
@@ -101,6 +104,13 @@ const RequestStatus = () => {
     'Rector': 'secondary',
     'Procurement Officer': 'error',
   };
+
+  const approvalSteps = [
+    { key: 'HODUser', label: 'HOD Approval' },
+    { key: 'LogisticsUser', label: 'Logistics Approval' },
+    { key: 'RectorUser', label: 'Rector Approval' },
+    { key: 'ProcurementUser', label: 'Procurement Approval' }
+  ];
 
   if (loading) return (
     <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
@@ -355,6 +365,37 @@ const RequestStatus = () => {
                       </Box>
                     </Grid>
                   </Grid>
+                </Card>
+              </Grid>
+
+
+              {/* Approval Flow Stepper */}
+              <Grid item xs={12}>
+                <Card variant="outlined" sx={{ p: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <CheckCircleIcon sx={{ mr: 1 }} /> Request Approval Flow
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+
+                  <Stepper activeStep={approvalSteps.findIndex(step => !selectedRequest[step.key])} alternativeLabel>
+                    {approvalSteps.map((step) => {
+                      const user = selectedRequest[step.key];
+                      return (
+                        <Step key={step.key}>
+                          <StepLabel
+                            icon={user ? <CheckCircleIcon color="success" /> : <PendingIcon color="disabled" />}
+                          >
+                            {step.label}
+                            {user && (
+                              <Typography variant="body2" color="textSecondary">
+                                Approved by {user.fullName} ({user.email}) ({user._id})
+                              </Typography>
+                            )}
+                          </StepLabel>
+                        </Step>
+                      );
+                    })}
+                  </Stepper>
                 </Card>
               </Grid>
 
