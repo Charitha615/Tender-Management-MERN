@@ -76,6 +76,24 @@ const RequestStatus = () => {
     setSelectedRequest(null);
   };
 
+  const handleLogout = () => {
+    Swal.fire({
+      title: 'Logout?',
+      text: 'Are you sure you want to logout?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#253B80',
+      cancelButtonColor: '#F44336',
+      confirmButtonText: 'Yes, logout!',
+      background: 'linear-gradient(145deg, #ffffff, #f5f5f5)'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.clear();
+        navigate('/');
+      }
+    });
+  };
+
   const statusColors = {
     'HOD': 'warning',
     'Logistics Officer': 'success',
@@ -92,17 +110,17 @@ const RequestStatus = () => {
 
   return (
     <Box sx={{ flexGrow: 1, minHeight: '100vh', backgroundColor: '#f5f7fa' }}>
-      <AppBar position="static" sx={{ 
-              background: 'linear-gradient(135deg, #253B80 0%, #1E88E5 100%)',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-            }}>
+      <AppBar position="static" sx={{
+        background: 'linear-gradient(135deg, #253B80 0%, #1E88E5 100%)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+      }}>
         <Toolbar>
           <img src={logo} alt="Logo" style={{ height: 50 }} />
           <Box sx={{ flexGrow: 1 }} />
           <Button color="inherit" onClick={() => navigate('/hod-dashboard')}>Home</Button>
           <Button color="inherit" onClick={() => navigate('/request-status')}>Request Status</Button>
           <Button color="inherit" onClick={() => navigate('/contact-us')}>Contact Us</Button>
-          <Button color="inherit" onClick={() => { localStorage.clear(); navigate('/'); }}>Logout</Button>
+          <Button color="inherit" onClick={handleLogout}>Logout</Button>
         </Toolbar>
       </AppBar>
 
@@ -115,8 +133,8 @@ const RequestStatus = () => {
             {requests.length === 0 ? (
               <Box textAlign="center" py={4}>
                 <Typography variant="body1">No requests found.</Typography>
-                <Button 
-                  variant="contained" 
+                <Button
+                  variant="contained"
                   sx={{ mt: 2, backgroundColor: '#253B80' }}
                   onClick={() => navigate('/hod-dashboard')}
                 >
@@ -144,26 +162,39 @@ const RequestStatus = () => {
                         <TableCell>{request.category}</TableCell>
                         <TableCell>{request.title}</TableCell>
                         <TableCell>
-                          <Chip 
-                            label={request.requestStage} 
-                            color={statusColors[request.requestStage] || 'default'} 
+                          <Chip
+                            label={request.requestStage}
+                            color={statusColors[request.requestStage] || 'default'}
                             size="small"
                           />
                         </TableCell>
                         <TableCell>
-                          <Chip 
-                            icon={request.isApproved ? <CheckCircleIcon /> : <PendingIcon />}
-                            label={request.isApproved ? 'Approved' : 'Pending'} 
-                            color={request.isApproved ? 'success' : 'warning'} 
+                          <Chip
+                            label={
+                              request.isApproved === null
+                                ? 'Rejected'
+                                : request.isApproved
+                                  ? 'Approved'
+                                  : 'Pending'
+                            }
                             size="small"
+                            color={
+                              request.isApproved === null
+                                ? 'error'
+                                : request.isApproved
+                                  ? 'success'
+                                  : 'warning'
+                            }
+                            variant="outlined"
                           />
+
                         </TableCell>
                         <TableCell>
                           {new Date(request.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          <IconButton 
-                            onClick={() => handleViewDetails(request)} 
+                          <IconButton
+                            onClick={() => handleViewDetails(request)}
                             color="primary"
                             size="small"
                           >
@@ -180,16 +211,16 @@ const RequestStatus = () => {
         </Card>
       </Container>
 
-      <Dialog 
-        open={openDialog} 
-        onClose={handleCloseDialog} 
-        maxWidth="md" 
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="md"
         fullWidth
         PaperProps={{ sx: { borderRadius: 3 } }}
       >
-        <DialogTitle sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+        <DialogTitle sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
           backgroundColor: '#253B80',
           color: 'white'
@@ -233,10 +264,10 @@ const RequestStatus = () => {
                       <Box display="flex" alignItems="center" mb={1}>
                         <PendingIcon color="action" sx={{ mr: 1 }} />
                         <Typography variant="subtitle1">
-                          <b>Status:</b> 
-                          <Chip 
-                            label={selectedRequest.requestStage} 
-                            color={statusColors[selectedRequest.requestStage] || 'default'} 
+                          <b>Status:</b>
+                          <Chip
+                            label={selectedRequest.requestStage}
+                            color={statusColors[selectedRequest.requestStage] || 'default'}
                             size="small"
                             sx={{ ml: 1 }}
                           />
@@ -245,14 +276,26 @@ const RequestStatus = () => {
                       <Box display="flex" alignItems="center" mb={1}>
                         <CheckCircleIcon color="action" sx={{ mr: 1 }} />
                         <Typography variant="subtitle1">
-                          <b>Approval:</b> 
-                          <Chip 
-                            icon={selectedRequest.isApproved ? <CheckCircleIcon /> : <PendingIcon />}
-                            label={selectedRequest.isApproved ? 'Approved' : 'Pending'} 
-                            color={selectedRequest.isApproved ? 'success' : 'warning'} 
+                          <b>Approval:</b>
+                          <Chip
+                            label={
+                              selectedRequest.isApproved === null
+                                ? 'Rejected'
+                                : selectedRequest.isApproved
+                                  ? 'Approved'
+                                  : 'Pending'
+                            }
                             size="small"
-                            sx={{ ml: 1 }}
+                            color={
+                              selectedRequest.isApproved === null
+                                ? 'error'
+                                : selectedRequest.isApproved
+                                  ? 'success'
+                                  : 'warning'
+                            }
+                            variant="outlined"
                           />
+
                         </Typography>
                       </Box>
                       <Box display="flex" alignItems="center">
@@ -273,17 +316,17 @@ const RequestStatus = () => {
                     <TitleIcon sx={{ mr: 1 }} /> Request Details
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  
+
                   <Box mb={3}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Title</Typography>
                     <Typography>{selectedRequest.title}</Typography>
                   </Box>
-                  
+
                   <Box mb={3}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Reason</Typography>
                     <Typography>{selectedRequest.reason}</Typography>
                   </Box>
-                  
+
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
                       <Box mb={2}>
@@ -331,8 +374,8 @@ const RequestStatus = () => {
           )}
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button 
-            onClick={handleCloseDialog} 
+          <Button
+            onClick={handleCloseDialog}
             variant="contained"
             sx={{ backgroundColor: '#253B80' }}
           >

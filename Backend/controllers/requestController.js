@@ -233,7 +233,7 @@ exports.approveRequest = async (req, res) => {
       req.params.id,
       {
         isApproved: false,
-        requestStage: 'Warehouse Officer',
+        requestStage: 'Rector',
         updatedAt: Date.now(),
         LogisticsisApproved: req.body.logisticsIsApproved,
         LogisticscreatedAt: Date.now(),
@@ -256,8 +256,11 @@ exports.rejectRequest = async (req, res) => {
     const request = await Request.findByIdAndUpdate(
       req.params.id,
       {
-        isApproved: false,
-        requestStage: 'Rejected',
+        isApproved: null,
+        LogisticsisApproved: false,
+        LogisticscreatedAt:Date.now(),
+        LogisticsUserID:req.body.logisticsUserID,
+        requestStage: 'Rejected Logistics Officer',
         note: req.body.reason || 'Rejected by Logistics Officer',
         updatedAt: Date.now()
       },
@@ -269,7 +272,6 @@ exports.rejectRequest = async (req, res) => {
   }
 };
 
-// Get all requests by logisticsUserID with user details
 // Get all requests by logisticsUserID with user details
 exports.getRequestsByLogisticsUser = async (req, res) => {
   try {
@@ -304,5 +306,112 @@ exports.getRequestsByLogisticsUser = async (req, res) => {
     res.status(500).json({ 
       message: error.message || 'Error fetching requests' 
     });
+  }
+};
+
+exports.getRectorRequests = async (req, res) => {
+  try {
+    const requests = await Request.find({
+      requestStage: 'Rector',
+      isApproved: false
+    }).lean(); // Convert Mongoose documents to plain objects
+
+    const requestsWithUserDetails = await Promise.all(
+      requests.map(async (request) => {
+        const updatedRequest = { ...request };
+        
+        if (request.HODUserID) {
+          const hodUser = await User.findById(request.HODUserID).select('fullName email');
+          updatedRequest.HODUser = hodUser; // Attach HOD user details
+        }
+        
+        if (request.LogisticsUserID) {
+          const logisticsUser = await User.findById(request.LogisticsUserID).select('fullName email');
+          updatedRequest.LogisticsUser = logisticsUser; // Attach Logistics user details
+        }
+        
+        return updatedRequest;
+      })
+    );
+
+    res.json(requestsWithUserDetails);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.approveRequestRector = async (req, res) => {
+  try {
+    console.log('Incoming body:', req.body); // Debug log
+    
+    const request = await Request.findByIdAndUpdate(
+      req.params.id,
+      {
+        isApproved: false,
+        requestStage: 'Procurement Officer',
+        updatedAt: Date.now(),
+        RectorisApproved: req.body.rectorIsApproved,
+        RectorcreatedAt: Date.now(),
+        RectorUserID: req.body.rectorUserID
+      },
+      { new: true, runValidators: true } // Added runValidators
+    );
+    
+    console.log('Updated request:', request); // Debug log
+    res.json(request);
+  } catch (error) {
+    console.error('Update error:', error); // Debug log
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// Get approved requests by user
+exports.getApprovedRequestsRector = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    console.log('userId:', userId);
+    const requests = await Request.find({
+      RectorUserID: userId,
+      RectorisApproved: true
+    });
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getRejectedRequestsRector = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    console.log('userId:', userId);
+    const requests = await Request.find({
+      RectorUserID: userId,
+      requestStage: 'Rejected Rector',  
+      RectorisApproved: false
+    });
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ message: error.message });  
+  }
+};
+
+exports.rejectRequestRector = async (req, res) => {
+  try {
+    const request = await Request.findByIdAndUpdate(
+      req.params.id,
+      {
+        isApproved: null,
+        RectorisApproved: false,
+        RectorcreatedAt:Date.now(),
+        RectorUserID:req.body.rectorUserID,
+        requestStage: 'Rejected Rector',
+        note: req.body.rectorRejectionReason || 'Rejected by Rector',
+        updatedAt: Date.now()
+      },
+      { new: true }
+    );
+    res.json(request);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 };

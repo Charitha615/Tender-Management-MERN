@@ -5,6 +5,11 @@ import Swal from 'sweetalert2';
 import logo from '../../../assets/img/navlogo.png';
 import background from '../../../assets/img/background.jpg';
 import {
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  Inventory as InventoryIcon
+} from '@mui/icons-material';
+import {
   AppBar,
   Toolbar,
   Typography,
@@ -36,19 +41,21 @@ import {
   Cancel as RejectIcon,
   Info as DetailsIcon,
   Close as CloseIcon,
-  Inventory as InventoryIcon,
-  LocalShipping as ShippingIcon,
+  School as SchoolIcon,
+  Gavel as GavelIcon,
   Logout as LogoutIcon,
   Home as HomeIcon,
-  Star as FeaturesIcon
+  Star as FeaturesIcon,
+  BarChart as StatsIcon,
+  Timeline as TimelineIcon
 } from '@mui/icons-material';
 
 // Custom styled components
-const GradientCard = styled(Card)(({ theme }) => ({
-  background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(245,245,245,0.95) 100%)',
+const GlassCard = styled(Card)(({ theme }) => ({
+  background: 'rgba(255, 255, 255, 0.85)',
+  backdropFilter: 'blur(12px)',
   borderRadius: '16px',
   boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-  backdropFilter: 'blur(4px)',
   border: '1px solid rgba(255, 255, 255, 0.18)',
   transition: 'transform 0.3s ease, box-shadow 0.3s ease',
   '&:hover': {
@@ -60,9 +67,11 @@ const GradientCard = styled(Card)(({ theme }) => ({
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
     borderRadius: '16px',
-    background: 'linear-gradient(145deg, #ffffff, #f5f5f5)',
+    background: 'rgba(255, 255, 255, 0.9)',
+    backdropFilter: 'blur(12px)',
     boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.25)',
-    minWidth: '600px'
+    minWidth: '600px',
+    border: '1px solid rgba(255, 255, 255, 0.18)'
   }
 }));
 
@@ -75,7 +84,7 @@ const StatusChip = styled(Chip)(({ theme, status }) => ({
     color: 'white'
   }),
   ...(status === 'Rector' && {
-    background: 'linear-gradient(45deg, #4CAF50 30%, #81C784 90%)',
+    background: 'linear-gradient(45deg, #9C27B0 30%, #E91E63 90%)',
     color: 'white'
   }),
   ...(status === 'HOD' && {
@@ -88,7 +97,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const LogisticsDashboard = () => {
+const RectorDashboard = () => {
   const navigate = useNavigate();
   const [tabValue, setTabValue] = useState(0);
   const [requests, setRequests] = useState([]);
@@ -98,7 +107,8 @@ const LogisticsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     pending: 0,
-    approved: 0
+    approved: 0,
+    rejected: 0
   });
 
   useEffect(() => {
@@ -106,29 +116,27 @@ const LogisticsDashboard = () => {
   }, []);
 
   const fetchRequests = async () => {
+    const userId = localStorage.getItem('userId');
     try {
-      const [pendingResponse, approvedResponse] = await Promise.all([
-        api.get('/api/logistics/pending'),
-        api.get(`/api/logistics/by-logistics-user/${localStorage.getItem('userId')}`)
+      const [pendingResponse, approvedResponse, rejectedResponse] = await Promise.all([
+        api.get('/api/rector/pending'),
+        api.get(`/api/rector/approved/${userId}`),
+        api.get(`/api/rector/rejected/${userId}`)
       ]);
 
       setRequests(pendingResponse.data);
       setStats({
         pending: pendingResponse.data.length,
-        approved: approvedResponse.data.length
+        approved: approvedResponse.data.length,
+        rejected: rejectedResponse.data.length
       });
     } catch (error) {
       Swal.fire({
         icon: 'error',
         title: 'Error',
         text: error.response?.data?.message || 'Failed to fetch requests',
-        background: 'linear-gradient(145deg, #ffffff, #f5f5f5)',
-        backdrop: `
-          rgba(0,0,0,0.4)
-          url("/images/nyan-cat.gif")
-          left top
-          no-repeat
-        `
+        background: 'rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(5px)'
       });
     } finally {
       setLoading(false);
@@ -139,14 +147,16 @@ const LogisticsDashboard = () => {
     setTabValue(newValue);
     if (newValue === 0) {
       fetchPendingRequests();
-    } else {
+    } else if (newValue === 1) {
       fetchApprovedRequests();
+    } else {
+      fetchRejectedRequests();
     }
   };
 
   const fetchPendingRequests = async () => {
     try {
-      const response = await api.get('/api/logistics/pending');
+      const response = await api.get('/api/rector/pending');
       setRequests(response.data);
       setStats(prev => ({ ...prev, pending: response.data.length }));
     } catch (error) {
@@ -155,13 +165,24 @@ const LogisticsDashboard = () => {
   };
 
   const fetchApprovedRequests = async () => {
+    const userId = localStorage.getItem('userId');
     try {
-      const logisticsUserID = localStorage.getItem('userId');
-      const response = await api.get(`/api/logistics/by-logistics-user/${logisticsUserID}`);
+      const response = await api.get(`/api/rector/approved/${userId}`);
       setRequests(response.data);
       setStats(prev => ({ ...prev, approved: response.data.length }));
     } catch (error) {
       console.error('Error fetching approved requests:', error);
+    }
+  };
+
+  const fetchRejectedRequests = async () => {
+    const userId = localStorage.getItem('userId');
+    try {
+      const response = await api.get(`/api/rector/rejected/${userId}`);
+      setRequests(response.data);
+      setStats(prev => ({ ...prev, rejected: response.data.length }));
+    } catch (error) {
+      console.error('Error fetching rejected requests:', error);
     }
   };
 
@@ -182,28 +203,26 @@ const LogisticsDashboard = () => {
       text: 'Are you sure you want to approve this request?',
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#4CAF50',
+      confirmButtonColor: '#9C27B0',
       cancelButtonColor: '#F44336',
       confirmButtonText: 'Yes, approve it!',
-      background: 'linear-gradient(145deg, #ffffff, #f5f5f5)',
-      backdrop: `
-        rgba(0,0,0,0.4)
-      `
+      background: 'rgba(255, 255, 255, 0.9)',
+      backdropFilter: 'blur(5px)'
     });
 
     if (result.isConfirmed) {
       try {
         const userId = localStorage.getItem('userId');
-        await api.post(`/api/logistics/approve/${requestId}`, {
-          logisticsIsApproved: true,
-          logisticsUserID: userId
+        await api.post(`/api/rector/approve/${requestId}`, {
+          rectorIsApproved: true,
+          rectorUserID: userId
         });
 
         Swal.fire({
           title: 'Approved!',
           text: 'Request approved successfully!',
           icon: 'success',
-          background: 'linear-gradient(145deg, #ffffff, #f5f5f5)',
+          background: 'rgba(255, 255, 255, 0.9)',
           showConfirmButton: false,
           timer: 1500
         });
@@ -214,7 +233,7 @@ const LogisticsDashboard = () => {
           title: 'Error',
           text: error.response?.data?.message || 'Approval failed',
           icon: 'error',
-          background: 'linear-gradient(145deg, #ffffff, #f5f5f5)'
+          background: 'rgba(255, 255, 255, 0.9)'
         });
       }
     }
@@ -227,7 +246,7 @@ const LogisticsDashboard = () => {
         title: 'Error',
         text: 'Please provide a rejection reason',
         icon: 'error',
-        background: 'linear-gradient(145deg, #ffffff, #f5f5f5)'
+        background: 'rgba(255, 255, 255, 0.9)'
       });
       return;
     }
@@ -240,22 +259,22 @@ const LogisticsDashboard = () => {
       confirmButtonColor: '#F44336',
       cancelButtonColor: '#2196F3',
       confirmButtonText: 'Yes, reject it!',
-      background: 'linear-gradient(145deg, #ffffff, #f5f5f5)'
+      background: 'rgba(255, 255, 255, 0.9)'
     });
 
     if (result.isConfirmed) {
       try {
         const userId = localStorage.getItem('userId');
-        await api.patch(`/api/logistics/reject/${selectedRequest._id}`, {
-          reason: rejectionReason,
-          logisticsUserID: userId
+        await api.patch(`/api/rector/rector-reject/${selectedRequest._id}`, {
+          rectorRejectionReason: rejectionReason,
+          rectorUserID: userId
         });
 
         Swal.fire({
           title: 'Rejected!',
           text: 'Request rejected successfully!',
           icon: 'success',
-          background: 'linear-gradient(145deg, #ffffff, #f5f5f5)',
+          background: 'rgba(255, 255, 255, 0.9)',
           showConfirmButton: false,
           timer: 1500
         });
@@ -267,7 +286,7 @@ const LogisticsDashboard = () => {
           title: 'Error',
           text: error.response?.data?.message || 'Rejection failed',
           icon: 'error',
-          background: 'linear-gradient(145deg, #ffffff, #f5f5f5)'
+          background: 'rgba(255, 255, 255, 0.9)'
         });
       }
     }
@@ -282,7 +301,7 @@ const LogisticsDashboard = () => {
       confirmButtonColor: '#253B80',
       cancelButtonColor: '#F44336',
       confirmButtonText: 'Yes, logout!',
-      background: 'linear-gradient(145deg, #ffffff, #f5f5f5)'
+      background: 'rgba(255, 255, 255, 0.9)'
     }).then((result) => {
       if (result.isConfirmed) {
         localStorage.clear();
@@ -301,11 +320,11 @@ const LogisticsDashboard = () => {
         backgroundImage: `url(${background})`,
         backgroundSize: 'cover'
       }}>
-        <GradientCard sx={{ p: 4, textAlign: 'center' }}>
-          <LinearProgress color="primary" sx={{ height: 8, borderRadius: 4, mb: 2 }} />
-          <Typography variant="h6" color="primary">Loading requests...</Typography>
+        <GlassCard sx={{ p: 4, textAlign: 'center', width: 400 }}>
+          <LinearProgress color="secondary" sx={{ height: 8, borderRadius: 4, mb: 2 }} />
+          <Typography variant="h6" color="secondary">Loading requests...</Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>Please wait while we fetch your data</Typography>
-        </GradientCard>
+        </GlassCard>
       </Box>
     );
   }
@@ -320,7 +339,7 @@ const LogisticsDashboard = () => {
       flexDirection: 'column'
     }}>
       <AppBar position="static" sx={{
-        background: 'linear-gradient(135deg, #253B80 0%, #1E88E5 100%)',
+        background: 'linear-gradient(135deg, #6A1B9A 0%, #9C27B0 100%)',
         boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
       }}>
         <Toolbar>
@@ -332,7 +351,7 @@ const LogisticsDashboard = () => {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent'
             }}>
-              Logistics Dashboard
+              Rector Dashboard
             </Typography>
           </Box>
 
@@ -342,7 +361,7 @@ const LogisticsDashboard = () => {
             <Button
               color="inherit"
               startIcon={<HomeIcon />}
-              onClick={() => navigate('/logistics-officer-dashboard')}
+              onClick={() => navigate('/rector-dashboard')}
               sx={{
                 '&:hover': {
                   background: 'rgba(255,255,255,0.1)',
@@ -355,8 +374,22 @@ const LogisticsDashboard = () => {
             </Button>
             <Button
               color="inherit"
+              startIcon={<StatsIcon />}
+              onClick={() => navigate('/rector-statistics')}
+              sx={{
+                '&:hover': {
+                  background: 'rgba(255,255,255,0.1)',
+                  transform: 'translateY(-2px)'
+                },
+                transition: 'all 0.3s ease'
+              }}
+            >
+              Statistics
+            </Button>
+            <Button
+              color="inherit"
               startIcon={<FeaturesIcon />}
-              onClick={() => navigate('/logistics-features')}
+              onClick={() => navigate('/rector-features')}
               sx={{
                 '&:hover': {
                   background: 'rgba(255,255,255,0.1)',
@@ -388,43 +421,57 @@ const LogisticsDashboard = () => {
       <Container sx={{ py: 4, flexGrow: 1 }}>
         {/* Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={6}>
-            <GradientCard>
+          <Grid item xs={12} md={4}>
+            <GlassCard>
               <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
                 <Avatar sx={{
                   mr: 3,
-                  bgcolor: 'primary.main',
-                  background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)'
+                  background: 'linear-gradient(45deg, #FF9800 30%, #FFB74D 90%)'
                 }}>
-                  <InventoryIcon />
+                  <GavelIcon />
                 </Avatar>
                 <Box>
                   <Typography variant="body2" color="text.secondary">Pending Requests</Typography>
                   <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{stats.pending}</Typography>
                 </Box>
               </CardContent>
-            </GradientCard>
+            </GlassCard>
           </Grid>
-          <Grid item xs={12} md={6}>
-            <GradientCard>
+          <Grid item xs={12} md={4}>
+            <GlassCard>
               <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
                 <Avatar sx={{
                   mr: 3,
-                  bgcolor: 'success.main',
                   background: 'linear-gradient(45deg, #4CAF50 30%, #81C784 90%)'
                 }}>
-                  <ShippingIcon />
+                  <CheckCircleIcon />
                 </Avatar>
                 <Box>
-                  <Typography variant="body2" color="text.secondary">Request Status</Typography>
+                  <Typography variant="body2" color="text.secondary">Approved Requests</Typography>
                   <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{stats.approved}</Typography>
                 </Box>
               </CardContent>
-            </GradientCard>
+            </GlassCard>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <GlassCard>
+              <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{
+                  mr: 3,
+                  background: 'linear-gradient(45deg, #F44336 30%, #E57373 90%)'
+                }}>
+                  <CancelIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">Rejected Requests</Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{stats.rejected}</Typography>
+                </Box>
+              </CardContent>
+            </GlassCard>
           </Grid>
         </Grid>
 
-        <GradientCard>
+        <GlassCard>
           <CardContent>
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
               <Tabs
@@ -434,16 +481,16 @@ const LogisticsDashboard = () => {
                 sx={{
                   '& .MuiTabs-indicator': {
                     height: 4,
-                    background: 'linear-gradient(90deg, #2196F3 0%, #21CBF3 100%)',
+                    background: 'linear-gradient(90deg, #9C27B0 0%, #E91E63 100%)',
                     borderRadius: '4px 4px 0 0'
                   }
                 }}
               >
                 <Tab
                   label={
-                    <Badge badgeContent={stats.pending} color="primary" sx={{ mr: 1 }}>
+                    <Badge badgeContent={stats.pending} color="warning" sx={{ mr: 1 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <InventoryIcon sx={{ mr: 1 }} />
+                        <GavelIcon sx={{ mr: 1 }} />
                         Pending Approval
                       </Box>
                     </Badge>
@@ -454,8 +501,19 @@ const LogisticsDashboard = () => {
                   label={
                     <Badge badgeContent={stats.approved} color="success" sx={{ mr: 1 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <ShippingIcon sx={{ mr: 1 }} />
-                        My Approved
+                        <CheckCircleIcon sx={{ mr: 1 }} />
+                        Approved
+                      </Box>
+                    </Badge>
+                  }
+                  sx={{ fontWeight: 'bold' }}
+                />
+                <Tab
+                  label={
+                    <Badge badgeContent={stats.rejected} color="error" sx={{ mr: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <CancelIcon sx={{ mr: 1 }} />
+                        Rejected
                       </Box>
                     </Badge>
                   }
@@ -468,22 +526,25 @@ const LogisticsDashboard = () => {
               <Box sx={{
                 textAlign: 'center',
                 py: 8,
-                background: 'linear-gradient(145deg, rgba(255,255,255,0.7), rgba(245,245,245,0.8))',
-                borderRadius: 2
+                background: 'rgba(255, 255, 255, 0.7)',
+                borderRadius: 2,
+                backdropFilter: 'blur(5px)'
               }}>
-                <InventoryIcon sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
+                <SchoolIcon sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
                 <Typography variant="h6" color="text.secondary">
-                  {tabValue === 0 ? 'No pending requests' : 'No approved requests found'}
+                  {tabValue === 0 ? 'No pending requests' :
+                    tabValue === 1 ? 'No approved requests' : 'No rejected requests'}
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 1 }}>
-                  {tabValue === 0 ? 'All clear!' : 'You haven\'t approved any requests yet'}
+                  {tabValue === 0 ? 'All clear!' :
+                    tabValue === 1 ? 'You haven\'t approved any requests yet' : 'You haven\'t rejected any requests yet'}
                 </Typography>
               </Box>
             ) : (
               <Grid container spacing={3}>
                 {requests.map((request) => (
                   <Grid item xs={12} key={request._id}>
-                    <GradientCard>
+                    <GlassCard>
                       <CardContent>
                         <Box sx={{
                           display: 'flex',
@@ -522,8 +583,6 @@ const LogisticsDashboard = () => {
                                 }
                                 variant="outlined"
                               />
-
-
                             </Box>
                           </Box>
                           <Box sx={{ display: 'flex' }}>
@@ -556,9 +615,9 @@ const LogisticsDashboard = () => {
                             <IconButton
                               onClick={() => handleViewDetails(request)}
                               sx={{
-                                color: 'info.main',
-                                background: 'rgba(33, 150, 243, 0.1)',
-                                '&:hover': { background: 'rgba(33, 150, 243, 0.2)' }
+                                color: 'secondary.main',
+                                background: 'rgba(156, 39, 176, 0.1)',
+                                '&:hover': { background: 'rgba(156, 39, 176, 0.2)' }
                               }}
                             >
                               <DetailsIcon />
@@ -566,13 +625,13 @@ const LogisticsDashboard = () => {
                           </Box>
                         </Box>
                       </CardContent>
-                    </GradientCard>
+                    </GlassCard>
                   </Grid>
                 ))}
               </Grid>
             )}
           </CardContent>
-        </GradientCard>
+        </GlassCard>
       </Container>
 
       {/* Request Details Dialog */}
@@ -587,12 +646,12 @@ const LogisticsDashboard = () => {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: 'linear-gradient(135deg, #253B80 0%, #1E88E5 100%)',
+          background: 'linear-gradient(135deg, #6A1B9A 0%, #9C27B0 100%)',
           color: 'white',
           py: 2
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <InventoryIcon sx={{ mr: 1 }} />
+            <SchoolIcon sx={{ mr: 1 }} />
             <Typography variant="h6">Request Details</Typography>
           </Box>
           <IconButton onClick={handleCloseDialog} sx={{ color: 'white' }}>
@@ -609,8 +668,9 @@ const LogisticsDashboard = () => {
                 alignItems: 'center',
                 mb: 3,
                 p: 2,
-                background: 'linear-gradient(145deg, rgba(37, 59, 128, 0.05), rgba(30, 136, 229, 0.05))',
-                borderRadius: 2
+                background: 'rgba(106, 27, 154, 0.05)',
+                borderRadius: 2,
+                backdropFilter: 'blur(5px)'
               }}>
                 <Box>
                   <Typography variant="h5" sx={{ fontWeight: 'bold' }}>{selectedRequest.title}</Typography>
@@ -641,15 +701,14 @@ const LogisticsDashboard = () => {
                     }
                     variant="outlined"
                   />
-
                 </Box>
               </Box>
 
               <Grid container spacing={3}>
                 {/* Left Column */}
                 <Grid item xs={12} md={6}>
-                  <Paper elevation={0} sx={{ p: 2, borderRadius: 2, height: '100%' }}>
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'primary.main' }}>
+                  <Paper elevation={0} sx={{ p: 2, borderRadius: 2, height: '100%', background: 'transparent' }}>
+                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'secondary.main' }}>
                       <DetailsIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
                       Request Information
                     </Typography>
@@ -671,7 +730,7 @@ const LogisticsDashboard = () => {
 
                     <Divider sx={{ my: 2 }} />
 
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'primary.main' }}>
+                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'secondary.main' }}>
                       <InventoryIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
                       Item Details
                     </Typography>
@@ -699,45 +758,45 @@ const LogisticsDashboard = () => {
 
                 {/* Right Column */}
                 <Grid item xs={12} md={6}>
-                  <Paper elevation={0} sx={{ p: 2, borderRadius: 2, height: '100%' }}>
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'primary.main' }}>
-                      <ShippingIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
-                      Personnel Information
+                  <Paper elevation={0} sx={{ p: 2, borderRadius: 2, height: '100%', background: 'transparent' }}>
+                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'secondary.main' }}>
+                      <TimelineIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+                      Approval Timeline
                     </Typography>
 
                     <Box sx={{ mb: 3 }}>
                       <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        HOD Information
+                        HOD Approval
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <Avatar sx={{
                           mr: 2,
-                          bgcolor: 'orange',
                           background: 'linear-gradient(45deg, #FF9800 30%, #FFB74D 90%)'
                         }}>
-                          {selectedRequest.HODUser.fullName.charAt(0)}
+                          {selectedRequest.HODUser?.fullName?.charAt(0) || 'H'}
                         </Avatar>
                         <Box>
-                          <Typography>{selectedRequest.HODUser.fullName}</Typography>
+                          <Typography>{selectedRequest.HODUser?.fullName || 'Not available'}</Typography>
                           <Typography variant="body2" color="text.secondary">
-                            {selectedRequest.HODUser.email}
+                            {selectedRequest.HODUser?.email || ''}
                           </Typography>
                           <Typography variant="caption" display="block">
-                            ID: {selectedRequest.HODUser._id}
+                            {selectedRequest.HODIsApproved ?
+                              `Approved on ${new Date(selectedRequest.HODApprovalDate).toLocaleString()}` :
+                              'Pending approval'}
                           </Typography>
                         </Box>
                       </Box>
                     </Box>
 
                     {selectedRequest.LogisticsUser && (
-                      <Box>
+                      <Box sx={{ mb: 3 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                          Logistics Officer
+                          Logistics Approval
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <Avatar sx={{
                             mr: 2,
-                            bgcolor: 'primary.main',
                             background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)'
                           }}>
                             {selectedRequest.LogisticsUser.fullName.charAt(0)}
@@ -748,10 +807,23 @@ const LogisticsDashboard = () => {
                               {selectedRequest.LogisticsUser.email}
                             </Typography>
                             <Typography variant="caption" display="block">
-                              ID: {selectedRequest.LogisticsUser._id}
+                              {selectedRequest.logisticsIsApproved ?
+                                `Approved on ${new Date(selectedRequest.logisticsApprovalDate).toLocaleString()}` :
+                                'Pending approval'}
                             </Typography>
                           </Box>
                         </Box>
+                      </Box>
+                    )}
+
+                    {selectedRequest.rectorRejectionReason && (
+                      <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+                          Rejection Reason
+                        </Typography>
+                        <Paper elevation={0} sx={{ p: 2, background: 'rgba(244, 67, 54, 0.05)', borderRadius: 2 }}>
+                          <Typography>{selectedRequest.rectorRejectionReason}</Typography>
+                        </Paper>
                       </Box>
                     )}
                   </Paper>
@@ -776,7 +848,9 @@ const LogisticsDashboard = () => {
                     InputProps={{
                       sx: {
                         borderRadius: 2,
-                        borderColor: 'divider'
+                        borderColor: 'divider',
+                        background: 'rgba(255, 255, 255, 0.7)',
+                        backdropFilter: 'blur(5px)'
                       }
                     }}
                   />
@@ -787,7 +861,7 @@ const LogisticsDashboard = () => {
         </DialogContent>
         <DialogActions sx={{
           p: 2,
-          background: 'linear-gradient(145deg, rgba(245,245,245,1), rgba(255,255,255,1))',
+          background: 'rgba(255, 255, 255, 0.9)',
           borderTop: '1px solid rgba(0,0,0,0.1)'
         }}>
           {tabValue === 0 && (
@@ -810,14 +884,14 @@ const LogisticsDashboard = () => {
           )}
           <Button
             onClick={handleCloseDialog}
-            color="primary"
+            color="secondary"
             variant="contained"
             sx={{
-              background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+              background: 'linear-gradient(45deg, #9C27B0 30%, #E91E63 90%)',
               borderRadius: 2,
-              boxShadow: '0 3px 5px 2px rgba(33, 150, 243, 0.1)',
+              boxShadow: '0 3px 5px 2px rgba(156, 39, 176, 0.1)',
               '&:hover': {
-                boxShadow: '0 3px 10px 2px rgba(33, 150, 243, 0.2)'
+                boxShadow: '0 3px 10px 2px rgba(156, 39, 176, 0.2)'
               }
             }}
           >
@@ -829,4 +903,4 @@ const LogisticsDashboard = () => {
   );
 };
 
-export default LogisticsDashboard;
+export default RectorDashboard;
