@@ -8,6 +8,8 @@ import RequestStatus from './components/pages/RequestStatus';
 import LogisticsDashboard from './components/pages/Users/Logistics/LogisticsDashboard';
 import LogisticsFeatures from './components/pages/Users/Logistics/LogisticsFeatures';
 
+import RectorDashboard from './components/pages/Users/Rector/RectorDashboard';
+
 
 function App() {
   return (
@@ -28,7 +30,8 @@ function App() {
         <Route path="/logistics-officer-dashboard" element={<LogisticsDashboard />} />
         <Route path="/logistics-features" element={<LogisticsFeatures />} />
 
-
+       {/* Rector Officer */}
+       <Route path="/rector-dashboard" element={<RectorDashboard />} />
 
       </Routes>
     </Router>

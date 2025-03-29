@@ -42,7 +42,7 @@ const Register = () => {
     contactPersonName: '',
     ministryOfDefenceDocument: '',
   });
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -257,12 +257,36 @@ const Register = () => {
                 <MenuItem value="">Select Role</MenuItem>
                 <MenuItem value="HOD">HOD</MenuItem>
                 <MenuItem value="Logistics Officer">Logistics Officer</MenuItem>
-                <MenuItem value="Warehouse Officer">Warehouse Officer</MenuItem>
+                {/* <MenuItem value="Warehouse Officer">Warehouse Officer</MenuItem> */}
                 <MenuItem value="Rector">Rector</MenuItem>
                 <MenuItem value="Supplier">Supplier</MenuItem>
                 <MenuItem value="Procurement Officer">Procurement Officer</MenuItem>
               </Select>
             </FormControl>
+
+            {formData.userRole === 'HOD' && (
+              <>
+                <TextField
+                  fullWidth
+                  margin="normal"
+                  label="Faculty Name"
+                  name="facultyName"
+                  value={formData.facultyName}
+                  onChange={handleChange}
+                  required
+                />
+                <TextField
+                  fullWidth
+                  margin="normal"
+                  label="Department Name"
+                  name="departmentName"
+                  value={formData.departmentName}
+                  onChange={handleChange}
+                  required
+                />
+
+              </>
+            )}
 
             {/* Role-Specific Fields */}
             {formData.userRole === 'Supplier' && (

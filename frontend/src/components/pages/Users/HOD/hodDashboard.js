@@ -123,10 +123,23 @@ const HODDashboard = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/');
-  };
+   const handleLogout = () => {
+     Swal.fire({
+       title: 'Logout?',
+       text: 'Are you sure you want to logout?',
+       icon: 'question',
+       showCancelButton: true,
+       confirmButtonColor: '#253B80',
+       cancelButtonColor: '#F44336',
+       confirmButtonText: 'Yes, logout!',
+       background: 'linear-gradient(145deg, #ffffff, #f5f5f5)'
+     }).then((result) => {
+       if (result.isConfirmed) {
+         localStorage.clear();
+         navigate('/');
+       }
+     });
+   };
 
   return (
     <Box
