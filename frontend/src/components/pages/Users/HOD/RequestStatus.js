@@ -41,6 +41,7 @@ import TitleIcon from '@mui/icons-material/Title';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
 import NoteIcon from '@mui/icons-material/Note';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 const RequestStatus = () => {
   const navigate = useNavigate();
@@ -103,10 +104,70 @@ const RequestStatus = () => {
     'Warehouse Officer': 'info',
     'Rector': 'secondary',
     'Procurement Officer': 'error',
+    'Rejected Logistics Officer': 'error',
+    'Rejected Rector': 'error',
+    'Rejected Procurement Officer': 'error'
+  };
+
+  const getApprovalStatus = (request) => {
+    if (request.requestStage.includes('Rejected')) {
+      return {
+        label: 'Rejected',
+        color: 'error',
+        icon: <CancelIcon color="error" />
+      };
+    }
+    if (request.isApproved === true) {
+      return {
+        label: 'Approved',
+        color: 'success',
+        icon: <CheckCircleIcon color="success" />
+      };
+    }
+    if (request.isApproved === false) {
+      return {
+        label: 'Pending',
+        color: 'warning',
+        icon: <PendingIcon color="warning" />
+      };
+    }
+    return {
+      label: 'Pending',
+      color: 'warning',
+      icon: <PendingIcon color="warning" />
+    };
+  };
+
+  const getRejectionDetails = (request) => {
+    if (request.requestStage === 'Rejected Logistics Officer') {
+      return {
+        rejectedBy: 'Logistics Officer',
+        rejectedAt: request.LogisticscreatedAt,
+        rejectedByUser: request.LogisticsUserID,
+        note: request.note
+      };
+    }
+    if (request.requestStage === 'Rejected Rector') {
+      return {
+        rejectedBy: 'Rector',
+        rejectedAt: request.RectorcreatedAt,
+        rejectedByUser: request.RectorUserID,
+        note: request.note
+      };
+    }
+    if (request.requestStage === 'Rejected Procurement Officer') {
+      return {
+        rejectedBy: 'Procurement Officer',
+        rejectedAt: request.ProcurementcreatedAt,
+        rejectedByUser: request.ProcurementUserID,
+        note: request.note
+      };
+    }
+    return null;
   };
 
   const approvalSteps = [
-    { key: 'HODUser', label: 'HOD Approval' },
+    { key: 'HODUser', label: 'HOD Requested' },
     { key: 'LogisticsUser', label: 'Logistics Approval' },
     { key: 'RectorUser', label: 'Rector Approval' },
     { key: 'ProcurementUser', label: 'Procurement Approval' }
@@ -166,53 +227,44 @@ const RequestStatus = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {requests.map((request) => (
-                      <TableRow key={request._id} hover>
-                        <TableCell>{request._id.substring(0, 8)}...</TableCell>
-                        <TableCell>{request.category}</TableCell>
-                        <TableCell>{request.title}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={request.requestStage}
-                            color={statusColors[request.requestStage] || 'default'}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={
-                              request.isApproved === null
-                                ? 'Rejected'
-                                : request.isApproved
-                                  ? 'Approved'
-                                  : 'Pending'
-                            }
-                            size="small"
-                            color={
-                              request.isApproved === null
-                                ? 'error'
-                                : request.isApproved
-                                  ? 'success'
-                                  : 'warning'
-                            }
-                            variant="outlined"
-                          />
-
-                        </TableCell>
-                        <TableCell>
-                          {new Date(request.createdAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <IconButton
-                            onClick={() => handleViewDetails(request)}
-                            color="primary"
-                            size="small"
-                          >
-                            <InfoIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {requests.map((request) => {
+                      const approvalStatus = getApprovalStatus(request);
+                      return (
+                        <TableRow key={request._id} hover>
+                          <TableCell>{request._id.substring(0, 8)}...</TableCell>
+                          <TableCell>{request.category}</TableCell>
+                          <TableCell>{request.title}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={request.requestStage}
+                              color={statusColors[request.requestStage] || 'default'}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={approvalStatus.label}
+                              size="small"
+                              color={approvalStatus.color}
+                              variant="outlined"
+                              icon={approvalStatus.icon}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            {new Date(request.createdAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <IconButton
+                              onClick={() => handleViewDetails(request)}
+                              color="primary"
+                              size="small"
+                            >
+                              <InfoIcon />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -288,24 +340,13 @@ const RequestStatus = () => {
                         <Typography variant="subtitle1">
                           <b>Approval:</b>
                           <Chip
-                            label={
-                              selectedRequest.isApproved === null
-                                ? 'Rejected'
-                                : selectedRequest.isApproved
-                                  ? 'Approved'
-                                  : 'Pending'
-                            }
+                            label={getApprovalStatus(selectedRequest).label}
                             size="small"
-                            color={
-                              selectedRequest.isApproved === null
-                                ? 'error'
-                                : selectedRequest.isApproved
-                                  ? 'success'
-                                  : 'warning'
-                            }
+                            color={getApprovalStatus(selectedRequest).color}
                             variant="outlined"
+                            icon={getApprovalStatus(selectedRequest).icon}
+                            sx={{ ml: 1 }}
                           />
-
                         </Typography>
                       </Box>
                       <Box display="flex" alignItems="center">
@@ -368,6 +409,40 @@ const RequestStatus = () => {
                 </Card>
               </Grid>
 
+              {/* Rejection Details (if rejected) */}
+              {selectedRequest.requestStage.includes('Rejected') && (
+                <Grid item xs={12}>
+                  <Card variant="outlined" sx={{ p: 2, borderColor: 'error.main' }}>
+                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', color: 'error.main' }}>
+                      <CancelIcon sx={{ mr: 1 }} /> Rejection Details
+                    </Typography>
+                    <Divider sx={{ mb: 2 }} />
+                    
+                    {getRejectionDetails(selectedRequest) && (
+                      <>
+                        <Box mb={2}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Rejected By</Typography>
+                          <Typography>{getRejectionDetails(selectedRequest).rejectedBy}</Typography>
+                        </Box>
+                        <Box mb={2}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Rejected At</Typography>
+                          <Typography>
+                            {new Date(getRejectionDetails(selectedRequest).rejectedAt).toLocaleString()}
+                          </Typography>
+                        </Box>
+                        <Box mb={2}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Rejected By User</Typography>
+                          <Typography>{getRejectionDetails(selectedRequest).rejectedByUser?.fullName || 'N/A'}</Typography>
+                        </Box>
+                        <Box mb={2}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Rejection Note</Typography>
+                          <Typography>{getRejectionDetails(selectedRequest).note || 'No reason provided'}</Typography>
+                        </Box>
+                      </>
+                    )}
+                  </Card>
+                </Grid>
+              )}
 
               {/* Approval Flow Stepper */}
               <Grid item xs={12}>
@@ -380,15 +455,32 @@ const RequestStatus = () => {
                   <Stepper activeStep={approvalSteps.findIndex(step => !selectedRequest[step.key])} alternativeLabel>
                     {approvalSteps.map((step) => {
                       const user = selectedRequest[step.key];
+                      const isRejected = selectedRequest.requestStage.includes('Rejected');
+                      const isRejectedAtThisStep = 
+                        (step.label === 'Logistics Approval' && selectedRequest.requestStage === 'Rejected Logistics Officer') ||
+                        (step.label === 'Rector Approval' && selectedRequest.requestStage === 'Rejected Rector') ||
+                        (step.label === 'Procurement Approval' && selectedRequest.requestStage === 'Rejected Procurement Officer');
+
                       return (
                         <Step key={step.key}>
                           <StepLabel
-                            icon={user ? <CheckCircleIcon color="success" /> : <PendingIcon color="disabled" />}
+                            icon={
+                              isRejectedAtThisStep ? 
+                                <CancelIcon color="error" /> : 
+                                user ? 
+                                  <CheckCircleIcon color={isRejected ? 'disabled' : 'success'} /> : 
+                                  <PendingIcon color={isRejected ? 'disabled' : 'action'} />
+                            }
                           >
                             {step.label}
                             {user && (
-                              <Typography variant="body2" color="textSecondary">
-                                Approved by {user.fullName} ({user.email}) ({user._id})
+                              <Typography variant="body2" color={isRejected ? 'text.disabled' : 'text.secondary'}>
+                                Requested by {user.fullName} ({user.email}) ({user._id})
+                              </Typography>
+                            )}
+                            {isRejectedAtThisStep && (
+                              <Typography variant="body2" color="error">
+                                Rejected on {new Date(getRejectionDetails(selectedRequest).rejectedAt).toLocaleDateString()}
                               </Typography>
                             )}
                           </StepLabel>

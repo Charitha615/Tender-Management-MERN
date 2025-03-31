@@ -81,6 +81,18 @@ const StatusChip = styled(Chip)(({ theme, status }) => ({
   ...(status === 'HOD' && {
     background: 'linear-gradient(45deg, #FF9800 30%, #FFB74D 90%)',
     color: 'white'
+  }),
+  ...(status === 'Rejected Logistics Officer' && {
+    background: 'linear-gradient(45deg, #F44336 30%, #E57373 90%)',
+    color: 'white'
+  }),
+  ...(status === 'Rejected Rector' && {
+    background: 'linear-gradient(45deg, #F44336 30%, #E57373 90%)',
+    color: 'white'
+  }),
+  ...(status === 'Rejected Procurement Officer' && {
+    background: 'linear-gradient(45deg, #F44336 30%, #E57373 90%)',
+    color: 'white'
   })
 }));
 
@@ -506,7 +518,7 @@ const LogisticsDashboard = () => {
                               />
                               <Chip
                                 label={
-                                  request.isApproved === null
+                                  request.requestStage.includes('Rejected')
                                     ? 'Rejected'
                                     : request.isApproved
                                       ? 'Approved'
@@ -514,7 +526,7 @@ const LogisticsDashboard = () => {
                                 }
                                 size="small"
                                 color={
-                                  request.isApproved === null
+                                  request.requestStage.includes('Rejected')
                                     ? 'error'
                                     : request.isApproved
                                       ? 'success'
@@ -522,8 +534,6 @@ const LogisticsDashboard = () => {
                                 }
                                 variant="outlined"
                               />
-
-
                             </Box>
                           </Box>
                           <Box sx={{ display: 'flex' }}>
@@ -676,6 +686,7 @@ const LogisticsDashboard = () => {
                       Item Details
                     </Typography>
 
+
                     <Grid container spacing={2}>
                       <Grid item xs={6}>
                         <Typography variant="subtitle2" color="text.secondary">Color</Typography>
@@ -694,6 +705,42 @@ const LogisticsDashboard = () => {
                         <Typography>{selectedRequest.newItemRequestCount}</Typography>
                       </Grid>
                     </Grid>
+                    <Divider sx={{ my: 2 }} />
+                    {selectedRequest.requestStage === "Rejected Logistics Officer" && (
+                      <Box sx={{ mt: 2, p: 2, background: 'rgba(244, 67, 54, 0.05)', borderRadius: 2 }}>
+                        <Typography variant="subtitle2" color="error" sx={{ fontWeight: 'bold' }}>
+                          Rejected by Logistics Officer
+                        </Typography>
+                        <Typography variant="body2">{selectedRequest.note}</Typography>
+                        <Typography variant="caption" display="block">
+                          {new Date(selectedRequest.LogisticscreatedAt).toLocaleString()}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {selectedRequest.requestStage === "Rejected Rector" && (
+                      <Box sx={{ mt: 2, p: 2, background: 'rgba(244, 67, 54, 0.05)', borderRadius: 2 }}>
+                        <Typography variant="subtitle2" color="error" sx={{ fontWeight: 'bold' }}>
+                          Rejected by Rector
+                        </Typography>
+                        <Typography variant="body2">{selectedRequest.note}</Typography>
+                        <Typography variant="caption" display="block">
+                          {new Date(selectedRequest.RectorcreatedAt).toLocaleString()}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {selectedRequest.requestStage === "Rejected Procurement Officer" && (
+                      <Box sx={{ mt: 2, p: 2, background: 'rgba(244, 67, 54, 0.05)', borderRadius: 2 }}>
+                        <Typography variant="subtitle2" color="error" sx={{ fontWeight: 'bold' }}>
+                          Rejected by Procurement Officer
+                        </Typography>
+                        <Typography variant="body2">{selectedRequest.note}</Typography>
+                        <Typography variant="caption" display="block">
+                          {new Date(selectedRequest.ProcurementcreatedAt).toLocaleString()}
+                        </Typography>
+                      </Box>
+                    )}
                   </Paper>
                 </Grid>
 
@@ -806,6 +853,8 @@ const LogisticsDashboard = () => {
                         </Box>
                       </Box>
                     )}
+
+
                   </Paper>
                 </Grid>
               </Grid>
