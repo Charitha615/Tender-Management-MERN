@@ -430,10 +430,10 @@ const RequestStatus = () => {
                             {new Date(getRejectionDetails(selectedRequest).rejectedAt).toLocaleString()}
                           </Typography>
                         </Box>
-                        <Box mb={2}>
+                        {/* <Box mb={2}>
                           <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Rejected By User</Typography>
                           <Typography>{getRejectionDetails(selectedRequest).rejectedByUser?.fullName || 'N/A'}</Typography>
-                        </Box>
+                        </Box> */}
                         <Box mb={2}>
                           <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Rejection Note</Typography>
                           <Typography>{getRejectionDetails(selectedRequest).note || 'No reason provided'}</Typography>

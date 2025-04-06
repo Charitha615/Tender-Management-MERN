@@ -847,7 +847,7 @@ const RectorDashboard = () => {
                     {selectedRequest.ProcurementUser && (
                       <Box sx={{ mb: 3 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        Procurement Officer
+                          Procurement Officer
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <Avatar sx={{
@@ -868,6 +868,42 @@ const RectorDashboard = () => {
                             </Typography>
                           </Box>
                         </Box>
+                      </Box>
+                    )}
+
+                    {selectedRequest.requestStage === "Rejected Logistics Officer" && (
+                      <Box sx={{ mt: 2, p: 2, background: 'rgba(244, 67, 54, 0.05)', borderRadius: 2 }}>
+                        <Typography variant="subtitle2" color="error" sx={{ fontWeight: 'bold' }}>
+                          Rejected by Logistics Officer
+                        </Typography>
+                        <Typography variant="body2">{selectedRequest.note}</Typography>
+                        <Typography variant="caption" display="block">
+                          {new Date(selectedRequest.LogisticscreatedAt).toLocaleString()}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {selectedRequest.requestStage === "Rejected Rector" && (
+                      <Box sx={{ mt: 2, p: 2, background: 'rgba(244, 67, 54, 0.05)', borderRadius: 2 }}>
+                        <Typography variant="subtitle2" color="error" sx={{ fontWeight: 'bold' }}>
+                          Rejected by Rector
+                        </Typography>
+                        <Typography variant="body2">{selectedRequest.note}</Typography>
+                        <Typography variant="caption" display="block">
+                          {new Date(selectedRequest.RectorcreatedAt).toLocaleString()}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {selectedRequest.requestStage === "Rejected Procurement Officer" && (
+                      <Box sx={{ mt: 2, p: 2, background: 'rgba(244, 67, 54, 0.05)', borderRadius: 2 }}>
+                        <Typography variant="subtitle2" color="error" sx={{ fontWeight: 'bold' }}>
+                          Rejected by Procurement Officer
+                        </Typography>
+                        <Typography variant="body2">{selectedRequest.note}</Typography>
+                        <Typography variant="caption" display="block">
+                          {new Date(selectedRequest.ProcurementcreatedAt).toLocaleString()}
+                        </Typography>
                       </Box>
                     )}
 

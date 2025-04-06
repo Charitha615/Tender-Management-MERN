@@ -1,0 +1,55 @@
+<?php
+require_once 'db_connection.php';
+
+class Doctor {
+    private $pdo;
+
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
+    }
+
+    // Add a new doctor
+    public function addDoctor($data) {
+        $sql = "INSERT INTO doctors (first_name, last_name, specialization, phone, email, department) 
+                VALUES (:first_name, :last_name, :specialization, :phone, :email, :department)";
+        
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute($data);
+    }
+
+    // Get all doctors
+    public function getAllDoctors() {
+        $sql = "SELECT * FROM doctors ORDER BY last_name, first_name";
+        $stmt = $this->pdo->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Get doctor by ID
+    public function getDoctorById($id) {
+        $sql = "SELECT * FROM doctors WHERE doctor_id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Update doctor information
+    public function updateDoctor($id, $data) {
+        $data['doctor_id'] = $id;
+        $sql = "UPDATE doctors SET 
+                first_name = :first_name, 
+                last_name = :last_name, 
+                specialization = :specialization, 
+                phone = :phone, 
+                email = :email, 
+                department = :department 
+                WHERE doctor_id = :doctor_id";
+        
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute($data);
+    }
+
+    // Delete a doctor
+    public function deleteDoctor($id) {
+        $sql = "DELETE FROM doctors WHERE doctor_id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute(['id' => $

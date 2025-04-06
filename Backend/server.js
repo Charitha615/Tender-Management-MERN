@@ -26,12 +26,17 @@ const authRoutes = require('./routes/authRoutes');
 const requestRoutes = require('./routes/requestRoutes');
 const logisticsRoutes = require('./routes/logisticsRoutes');
 const rectorRoutes = require('./routes/rectorRoute');
+const procurementRoute = require('./routes/procurementRoute');
+const tenderRoutes = require('./routes/tenderRoutes');
+
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/logistics', logisticsRoutes);
 app.use('/api/rector', rectorRoutes);
+app.use('/api/procurement', procurementRoute);
+app.use('/api/tenders', tenderRoutes);
 
 
 // Start server

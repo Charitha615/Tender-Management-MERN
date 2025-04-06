@@ -9,6 +9,7 @@ import LogisticsDashboard from './components/pages/Users/Logistics/LogisticsDash
 import LogisticsFeatures from './components/pages/Users/Logistics/LogisticsFeatures';
 
 import RectorDashboard from './components/pages/Users/Rector/RectorDashboard';
+import ProcurementOfficer from './components/pages/Users/ProcurementOfficer/ProcurementofficerDashboard';
 
 
 function App() {
@@ -32,6 +33,9 @@ function App() {
 
        {/* Rector Officer */}
        <Route path="/rector-dashboard" element={<RectorDashboard />} />
+
+       {/* Procurement Officer */}
+       <Route path="/procurement-officer-dashboard" element={<ProcurementOfficer />} />
 
       </Routes>
     </Router>
