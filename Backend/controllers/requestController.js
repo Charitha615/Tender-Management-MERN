@@ -397,10 +397,9 @@ exports.getRectorRequests = async (req, res) => {
 
 exports.approveRequestRector = async (req, res) => {
   try {
-    console.log('Incoming body:', req.body); // Debug log
 
     const request = await Request.findByIdAndUpdate(
-      req.params.id,
+      req.params.id,  
       {
         isApproved: false,
         requestStage: 'Procurement Officer',
@@ -425,7 +424,7 @@ exports.getApprovedRequestsRector = async (req, res) => {
   try {
     const userId = req.params.userId;
     console.log('userId:', userId);
-    
+
     const requests = await Request.find({
       RectorUserID: userId,
       RectorisApproved: true
@@ -469,12 +468,42 @@ exports.getRejectedRequestsRector = async (req, res) => {
   try {
     const userId = req.params.userId;
     console.log('userId:', userId);
+
+    // Find all requests that match the criteria (returns an array)
     const requests = await Request.find({
       RectorUserID: userId,
       requestStage: 'Rejected Rector',
       RectorisApproved: false
     });
-    res.json(requests);
+
+    // Process each request to add user details
+    const updatedRequests = await Promise.all(requests.map(async (request) => {
+      const updatedRequest = request.toObject(); // Convert mongoose document to plain object
+
+      if (request.HODUserID) {
+        const hodUser = await User.findById(request.HODUserID).select('fullName email');
+        updatedRequest.HODUser = hodUser;
+      }
+
+      if (request.LogisticsUserID) {
+        const logisticsUser = await User.findById(request.LogisticsUserID).select('fullName email');
+        updatedRequest.LogisticsUser = logisticsUser;
+      }
+
+      if (request.RectorUserID) {
+        const rectorUser = await User.findById(request.RectorUserID).select('fullName email');
+        updatedRequest.RectorUser = rectorUser;
+      }
+
+      if (request.ProcurementUserID) {
+        const procurementUser = await User.findById(request.ProcurementUserID).select('fullName email');
+        updatedRequest.ProcurementUser = procurementUser;
+      }
+
+      return updatedRequest;
+    }));
+
+    res.json(updatedRequests);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -498,5 +527,165 @@ exports.rejectRequestRector = async (req, res) => {
     res.json(request);
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+
+//Procurement Officer
+
+
+exports.getRejectedRequestsProcurement = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    console.log('userId:', userId);
+
+    const requests = await Request.find({
+      ProcurementUserID: userId,
+      requestStage: 'Rejected Procurement Officer',
+      ProcurementisApproved: false
+    });
+
+    // Process each request to add user details
+    const updatedRequests = await Promise.all(requests.map(async (request) => {
+      const updatedRequest = request.toObject(); // Convert mongoose document to plain object
+
+      if (request.HODUserID) {
+        const hodUser = await User.findById(request.HODUserID).select('fullName email');
+        updatedRequest.HODUser = hodUser;
+      }
+
+      if (request.LogisticsUserID) {
+        const logisticsUser = await User.findById(request.LogisticsUserID).select('fullName email');
+        updatedRequest.LogisticsUser = logisticsUser;
+      }
+
+      if (request.RectorUserID) {
+        const rectorUser = await User.findById(request.RectorUserID).select('fullName email');
+        updatedRequest.RectorUser = rectorUser;
+      }
+
+      if (request.ProcurementUserID) {
+        const procurementUser = await User.findById(request.ProcurementUserID).select('fullName email');
+        updatedRequest.ProcurementUser = procurementUser;
+      }
+
+      return updatedRequest;
+    }));
+
+    res.json(updatedRequests);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getApprovedRequestsProcurement = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    console.log('userId:', userId);
+
+    const requests = await Request.find({
+      ProcurementUserID: userId,
+      ProcurementisApproved: true
+    });
+
+    // Populate user details for each request
+    const updatedRequests = await Promise.all(requests.map(async (request) => {
+      const updatedRequest = request.toObject(); // Convert Mongoose document to plain object
+
+      if (request.HODUserID) {
+        const hodUser = await User.findById(request.HODUserID).select('fullName email');
+        updatedRequest.HODUser = hodUser; // Attach HOD user details
+      }
+
+      if (request.LogisticsUserID) {
+        const logisticsUser = await User.findById(request.LogisticsUserID).select('fullName email');
+        updatedRequest.LogisticsUser = logisticsUser; // Attach Logistics user details
+      }
+
+      if (request.RectorUserID) {
+        const rectorUser = await User.findById(request.RectorUserID).select('fullName email');
+        updatedRequest.RectorUser = rectorUser; // Attach Rector user details
+      }
+
+      if (request.ProcurementUserID) {
+        const procurementUser = await User.findById(request.ProcurementUserID).select('fullName email');
+        updatedRequest.ProcurementUser = procurementUser; // Attach Procurement User details
+      }
+
+      return updatedRequest;
+    }));
+
+    res.json(updatedRequests);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+exports.approveRequestProcurementOfficer = async (req, res) => {
+  try {
+    console.log('Incoming body:', req.body); // Debug log
+
+    const request = await Request.findByIdAndUpdate(
+      req.params.id,  
+      {
+        isApproved: true,
+        requestStage: 'Procurement Officer',
+        updatedAt: Date.now(),
+        ProcurementisApproved: req.body.procurementIsApproved,
+        ProcurementcreatedAt: Date.now(),
+        ProcurementUserID: req.body.procurementUserID
+      },
+      { new: true, runValidators: true } // Added runValidators
+    );
+
+    console.log('Updated request:', request); // Debug log
+    res.json(request);
+  } catch (error) {
+    console.error('Update error:', error); // Debug log
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+exports.getProcurementRequests = async (req, res) => {
+  try {
+    const requests = await Request.find({
+      requestStage: 'Procurement Officer',
+      isApproved: false
+    }).lean(); // Convert Mongoose documents to plain objects
+
+    const requestsWithUserDetails = await Promise.all(
+      requests.map(async (request) => {
+        const updatedRequest = { ...request };
+
+        if (request.HODUserID) {
+          const hodUser = await User.findById(request.HODUserID).select('fullName email');
+          updatedRequest.HODUser = hodUser; // Attach HOD user details
+        }
+
+        if (request.LogisticsUserID) {
+          const logisticsUser = await User.findById(request.LogisticsUserID).select('fullName email');
+          updatedRequest.LogisticsUser = logisticsUser; // Attach Logistics user details
+        }
+
+        if (request.RectorUserID) {
+          const RectorUser = await User.findById(request.RectorUserID).select('fullName email');
+          updatedRequest.RectorUser = RectorUser; // Attach Rector user details
+        }
+
+
+        if (request.ProcurementUserID) {
+          const ProcurementUser = await User.findById(request.ProcurementUserID).select('fullName email');
+          updatedRequest.ProcurementUser = ProcurementUser; // Attach Procurement User user details
+        }
+
+        return updatedRequest;
+      })
+    );
+
+    res.json(requestsWithUserDetails);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
