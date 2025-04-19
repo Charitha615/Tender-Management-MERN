@@ -161,7 +161,7 @@ const HODDashboard = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}></Typography>
           <Button color="inherit" onClick={() => navigate('/hod-dashboard')}>Home</Button>
           <Button color="inherit" onClick={() => navigate('/request-status')}>Request Status</Button>
-          <Button color="inherit" onClick={() => navigate('/contact-us')}>Contact Us</Button>
+          {/* <Button color="inherit" onClick={() => navigate('/contact-us')}>Contact Us</Button> */}
           <Button color="inherit" onClick={handleLogout}>Logout</Button>
         </Toolbar>
       </AppBar>

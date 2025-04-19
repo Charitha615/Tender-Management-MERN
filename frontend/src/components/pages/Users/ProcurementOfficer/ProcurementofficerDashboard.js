@@ -1277,12 +1277,13 @@ const ProcurementDashboard = () => {
 
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                             <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
-                                                {selectedRequest.createdBy.fullName.charAt(0)}
+                                                {(selectedRequest.ProcurementUser?.fullName || selectedRequest.createdBy?.fullName || '').charAt(0)}
                                             </Avatar>
                                             <Box>
-                                                <Typography>{selectedRequest.createdBy.fullName}</Typography>
+                                                <Typography>{selectedRequest.ProcurementUser?.fullName || selectedRequest.createdBy?.fullName }</Typography>
                                                 <Typography variant="body2" color="text.secondary">
-                                                    {selectedRequest.createdBy.email} • {selectedRequest.createdBy.phoneNumber}
+                                                    {(selectedRequest.ProcurementUser?.email || selectedRequest.createdBy?.email)} / 
+                                                    {(selectedRequest.ProcurementUser?.phoneNumber || selectedRequest.createdBy?.phoneNumber)}
                                                 </Typography>
                                             </Box>
                                         </Box>
@@ -1300,16 +1301,16 @@ const ProcurementDashboard = () => {
                                         <Box sx={{ mb: 3 }}>
                                             <Typography variant="subtitle2" color="text.secondary">Category</Typography>
                                             <Typography sx={{ mb: 2 }}>
-                                                {selectedRequest.requestId.category} / {selectedRequest.requestId.subCategory}
+                                                {selectedRequest.category || selectedRequest.requestId?.category} / {selectedRequest.subCategory || selectedRequest.requestId?.subCategory}
                                             </Typography>
 
                                             <Typography variant="subtitle2" color="text.secondary">Reason</Typography>
-                                            <Typography sx={{ mb: 2 }}>{selectedRequest.requestId.reason}</Typography>
+                                            <Typography sx={{ mb: 2 }}>{selectedRequest.reason || selectedRequest.requestId?.reason}</Typography>
 
-                                            {selectedRequest.requestId.note && (
+                                            {(selectedRequest.note || selectedRequest.requestId?.note) && (
                                                 <>
                                                     <Typography variant="subtitle2" color="text.secondary">Notes</Typography>
-                                                    <Typography>{selectedRequest.requestId.note}</Typography>
+                                                    <Typography>{selectedRequest.note || selectedRequest.requestId?.note}</Typography>
                                                 </>
                                             )}
                                         </Box>
@@ -1324,19 +1325,19 @@ const ProcurementDashboard = () => {
                                         <Grid container spacing={2}>
                                             <Grid item xs={6}>
                                                 <Typography variant="subtitle2" color="text.secondary">Color/Specification</Typography>
-                                                <Typography>{selectedRequest.requestId.colorPickup}</Typography>
+                                                <Typography>{selectedRequest.colorPickup || selectedRequest.requestId?.colorPickup}</Typography>
                                             </Grid>
                                             <Grid item xs={6}>
                                                 <Typography variant="subtitle2" color="text.secondary">Current Qty</Typography>
-                                                <Typography>{selectedRequest.requestId.currentItemCount}</Typography>
+                                                <Typography>{selectedRequest.currentItemCount || selectedRequest.requestId?.currentItemCount}</Typography>
                                             </Grid>
                                             <Grid item xs={6}>
                                                 <Typography variant="subtitle2" color="text.secondary">Damaged Qty</Typography>
-                                                <Typography>{selectedRequest.requestId.damagedItemCount}</Typography>
+                                                <Typography>{selectedRequest.damagedItemCount || selectedRequest.requestId?.damagedItemCount}</Typography>
                                             </Grid>
                                             <Grid item xs={6}>
                                                 <Typography variant="subtitle2" color="text.secondary">Requested Qty</Typography>
-                                                <Typography>{selectedRequest.requestId.newItemRequestCount}</Typography>
+                                                <Typography>{selectedRequest.newItemRequestCount || selectedRequest.requestId?.newItemRequestCount}</Typography>
                                             </Grid>
                                         </Grid>
 
@@ -1349,30 +1350,29 @@ const ProcurementDashboard = () => {
 
                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                             <Chip
-                                                label={`HOD: ${selectedRequest.requestId.HODisApproved ? 'Approved' : 'Pending'}`}
-                                                color={selectedRequest.requestId.HODisApproved ? 'success' : 'warning'}
+                                                label={`HOD: ${selectedRequest.HODisApproved || selectedRequest.requestId?.HODisApproved ? 'Approved' : 'Pending'}`}
+                                                color={(selectedRequest.HODisApproved || selectedRequest.requestId?.HODisApproved) ? 'success' : 'warning'}
                                                 size="small"
                                                 variant="outlined"
                                             />
                                             <Chip
-                                                label={`Logistics: ${selectedRequest.requestId.LogisticsisApproved ? 'Approved' : 'Pending'}`}
-                                                color={selectedRequest.requestId.LogisticsisApproved ? 'success' : 'warning'}
+                                                label={`Logistics: ${selectedRequest.LogisticsisApproved || selectedRequest.requestId?.LogisticsisApproved ? 'Approved' : 'Pending'}`}
+                                                color={(selectedRequest.LogisticsisApproved || selectedRequest.requestId?.LogisticsisApproved) ? 'success' : 'warning'}
                                                 size="small"
                                                 variant="outlined"
                                             />
                                             <Chip
-                                                label={`Rector: ${selectedRequest.requestId.RectorisApproved ? 'Approved' : 'Pending'}`}
-                                                color={selectedRequest.requestId.RectorisApproved ? 'success' : 'warning'}
+                                                label={`Rector: ${selectedRequest.RectorisApproved || selectedRequest.requestId?.RectorisApproved ? 'Approved' : 'Pending'}`}
+                                                color={(selectedRequest.RectorisApproved || selectedRequest.requestId?.RectorisApproved) ? 'success' : 'warning'}
                                                 size="small"
                                                 variant="outlined"
                                             />
                                             <Chip
-                                                label={`Procurement: ${selectedRequest.requestId.ProcurementisApproved ? 'Approved' : 'Pending'}`}
-                                                color={selectedRequest.requestId.ProcurementisApproved ? 'success' : 'warning'}
+                                                label={`Procurement: ${selectedRequest.ProcurementisApproved || selectedRequest.requestId?.ProcurementisApproved ? 'Approved' : 'Pending'}`}
+                                                color={(selectedRequest.ProcurementisApproved || selectedRequest.requestId?.ProcurementisApproved) ? 'success' : 'warning'}
                                                 size="small"
                                                 variant="outlined"
                                             />
-                                         
                                         </Box>
                                     </Paper>
                                 </Grid>
@@ -1392,7 +1392,7 @@ const ProcurementDashboard = () => {
                                                 width: 40,
                                                 height: 40,
                                                 borderRadius: '50%',
-                                                bgcolor: selectedRequest.requestId.HODisApproved ? 'success.main' : 'grey.300',
+                                                bgcolor: (selectedRequest.HODisApproved || selectedRequest.requestId?.HODisApproved) ? 'success.main' : 'grey.300',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
@@ -1403,8 +1403,8 @@ const ProcurementDashboard = () => {
                                             <Box>
                                                 <Typography fontWeight="bold">HOD Approval</Typography>
                                                 <Typography variant="body2" color="text.secondary">
-                                                    {selectedRequest.requestId.HODisApproved ?
-                                                        `Approved on ${new Date(selectedRequest.requestId.HODcreatedAt).toLocaleString()}` :
+                                                    {(selectedRequest.HODisApproved || selectedRequest.requestId?.HODisApproved) ?
+                                                        `Approved on ${new Date(selectedRequest.HODcreatedAt || selectedRequest.requestId?.HODcreatedAt).toLocaleString()}` :
                                                         'Pending'}
                                                 </Typography>
                                             </Box>
@@ -1416,7 +1416,7 @@ const ProcurementDashboard = () => {
                                                 width: 40,
                                                 height: 40,
                                                 borderRadius: '50%',
-                                                bgcolor: selectedRequest.requestId.LogisticsisApproved ? 'success.main' : 'grey.300',
+                                                bgcolor: (selectedRequest.LogisticsisApproved || selectedRequest.requestId?.LogisticsisApproved) ? 'success.main' : 'grey.300',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
@@ -1427,8 +1427,8 @@ const ProcurementDashboard = () => {
                                             <Box>
                                                 <Typography fontWeight="bold">Logistics Approval</Typography>
                                                 <Typography variant="body2" color="text.secondary">
-                                                    {selectedRequest.requestId.LogisticsisApproved ?
-                                                        `Approved on ${new Date(selectedRequest.requestId.LogisticscreatedAt).toLocaleString()}` :
+                                                    {(selectedRequest.LogisticsisApproved || selectedRequest.requestId?.LogisticsisApproved) ?
+                                                        `Approved on ${new Date(selectedRequest.LogisticscreatedAt || selectedRequest.requestId?.LogisticscreatedAt).toLocaleString()}` :
                                                         'Pending'}
                                                 </Typography>
                                             </Box>
@@ -1440,7 +1440,7 @@ const ProcurementDashboard = () => {
                                                 width: 40,
                                                 height: 40,
                                                 borderRadius: '50%',
-                                                bgcolor: selectedRequest.requestId.RectorisApproved ? 'success.main' : 'grey.300',
+                                                bgcolor: (selectedRequest.RectorisApproved || selectedRequest.requestId?.RectorisApproved) ? 'success.main' : 'grey.300',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
@@ -1451,8 +1451,8 @@ const ProcurementDashboard = () => {
                                             <Box>
                                                 <Typography fontWeight="bold">Rector Approval</Typography>
                                                 <Typography variant="body2" color="text.secondary">
-                                                    {selectedRequest.requestId.RectorisApproved ?
-                                                        `Approved on ${new Date(selectedRequest.requestId.RectorcreatedAt).toLocaleString()}` :
+                                                    {(selectedRequest.RectorisApproved || selectedRequest.requestId?.RectorisApproved) ?
+                                                        `Approved on ${new Date(selectedRequest.RectorcreatedAt || selectedRequest.requestId?.RectorcreatedAt).toLocaleString()}` :
                                                         'Pending'}
                                                 </Typography>
                                             </Box>
@@ -1464,7 +1464,7 @@ const ProcurementDashboard = () => {
                                                 width: 40,
                                                 height: 40,
                                                 borderRadius: '50%',
-                                                bgcolor: selectedRequest.requestId.ProcurementisApproved ? 'success.main' : 'grey.300',
+                                                bgcolor: (selectedRequest.ProcurementisApproved || selectedRequest.requestId?.ProcurementisApproved) ? 'success.main' : 'grey.300',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
@@ -1475,14 +1475,12 @@ const ProcurementDashboard = () => {
                                             <Box>
                                                 <Typography fontWeight="bold">Procurement Approval</Typography>
                                                 <Typography variant="body2" color="text.secondary">
-                                                    {selectedRequest.requestId.ProcurementisApproved ?
-                                                        `Approved on ${new Date(selectedRequest.requestId.ProcurementcreatedAt).toLocaleString()}` :
+                                                    {(selectedRequest.ProcurementisApproved || selectedRequest.requestId?.ProcurementisApproved) ?
+                                                        `Approved on ${new Date(selectedRequest.ProcurementcreatedAt || selectedRequest.requestId?.ProcurementcreatedAt).toLocaleString()}` :
                                                         'Pending'}
                                                 </Typography>
                                             </Box>
                                         </Box>
-
-                        
                                     </Box>
                                 </Paper>
                             </Box>

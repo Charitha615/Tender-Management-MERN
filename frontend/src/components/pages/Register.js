@@ -218,14 +218,14 @@ const Register = () => {
               onChange={handleChange}
               required
             />
-            <TextField
+            {/* <TextField
               fullWidth
               margin="normal"
               label="Profile Picture URL (Optional)"
               name="profilePicture"
               value={formData.profilePicture}
               onChange={handleChange}
-            />
+            /> */}
             <TextField
               fullWidth
               margin="normal"
