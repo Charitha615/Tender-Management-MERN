@@ -45,7 +45,7 @@ exports.createTender = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getAllTenders = catchAsync(async (req, res, next) => {
+exports.getAllTenders = catchAsync(async (req, res, next) => {  
   try {
     const tenders = await Tender.find()
       .populate('requestId')  // Populate full TenderRequest data

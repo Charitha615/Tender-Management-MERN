@@ -779,7 +779,7 @@ const ProcurementDashboard = () => {
                                                                 </IconButton>
                                                             </>
                                                         )}
-                                                        {tabValue === 1 && (
+                                                        {tabValue === 1 && selectedRequest?.Tender !== true && (
                                                             <IconButton
                                                                 onClick={() => handleCreateTender(request)}
                                                                 sx={{
@@ -1280,9 +1280,9 @@ const ProcurementDashboard = () => {
                                                 {(selectedRequest.ProcurementUser?.fullName || selectedRequest.createdBy?.fullName || '').charAt(0)}
                                             </Avatar>
                                             <Box>
-                                                <Typography>{selectedRequest.ProcurementUser?.fullName || selectedRequest.createdBy?.fullName }</Typography>
+                                                <Typography>{selectedRequest.ProcurementUser?.fullName || selectedRequest.createdBy?.fullName}</Typography>
                                                 <Typography variant="body2" color="text.secondary">
-                                                    {(selectedRequest.ProcurementUser?.email || selectedRequest.createdBy?.email)} / 
+                                                    {(selectedRequest.ProcurementUser?.email || selectedRequest.createdBy?.email)} /
                                                     {(selectedRequest.ProcurementUser?.phoneNumber || selectedRequest.createdBy?.phoneNumber)}
                                                 </Typography>
                                             </Box>
@@ -1781,7 +1781,7 @@ const ProcurementDashboard = () => {
                     </MenuItem>
 
                 )}
-                {tabValue === 1 && (
+                {tabValue === 1 && selectedRequest?.Tender !== true && (
                     <MenuItem onClick={() => {
                         handleCreateTender(selectedRequest);
                         handleMenuClose();
@@ -1792,7 +1792,6 @@ const ProcurementDashboard = () => {
                         Create Tender
                     </MenuItem>
                 )}
-
                 {tabValue === 3 && (
                     <MenuItem onClick={() => {
                         handleViewTender(selectedRequest);
