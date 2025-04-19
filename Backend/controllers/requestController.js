@@ -1,5 +1,6 @@
 const Request = require('../models/TenderRequest');
 const User = require('../models/User');
+const Tender = require('../models/Tender');
 
 // Create a new request
 exports.createRequest = async (req, res) => {
@@ -423,7 +424,6 @@ exports.approveRequestRector = async (req, res) => {
 exports.getApprovedRequestsRector = async (req, res) => {
   try {
     const userId = req.params.userId;
-    console.log('userId:', userId);
 
     const requests = await Request.find({
       RectorUserID: userId,
@@ -467,7 +467,6 @@ exports.getApprovedRequestsRector = async (req, res) => {
 exports.getRejectedRequestsRector = async (req, res) => {
   try {
     const userId = req.params.userId;
-    console.log('userId:', userId);
 
     // Find all requests that match the criteria (returns an array)
     const requests = await Request.find({
@@ -537,7 +536,6 @@ exports.rejectRequestRector = async (req, res) => {
 exports.getRejectedRequestsProcurement = async (req, res) => {
   try {
     const userId = req.params.userId;
-    console.log('userId:', userId);
 
     const requests = await Request.find({
       ProcurementUserID: userId,
@@ -581,16 +579,19 @@ exports.getRejectedRequestsProcurement = async (req, res) => {
 exports.getApprovedRequestsProcurement = async (req, res) => {
   try {
     const userId = req.params.userId;
-    console.log('userId:', userId);
 
     const requests = await Request.find({
       ProcurementUserID: userId,
       ProcurementisApproved: true
     });
 
-    // Populate user details for each request
+    // Populate user details and check for tender existence for each request
     const updatedRequests = await Promise.all(requests.map(async (request) => {
       const updatedRequest = request.toObject(); // Convert Mongoose document to plain object
+
+      // Check if a tender exists for this request
+      const tenderExists = await Tender.exists({ requestId: request._id });
+      updatedRequest.Tender = tenderExists ? true : false;
 
       if (request.HODUserID) {
         const hodUser = await User.findById(request.HODUserID).select('fullName email');
