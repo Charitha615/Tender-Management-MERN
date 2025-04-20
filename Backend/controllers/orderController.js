@@ -172,3 +172,68 @@ exports.updateOrderStatus = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+// Update order status using :id and :action from params
+// Update order status using :id and :action from params
+exports.updateOrderStatusByAction = async (req, res) => {
+  try {
+    const { id, action } = req.params;
+
+    const actionToStatus = {
+      approve: 'approved',
+      reject: 'rejected',
+      cancel: 'cancelled',
+      complete: 'completed',
+      delivered: 'delivered'
+    };
+
+    const status = actionToStatus[action.toLowerCase()];
+    if (!status) {
+      return res.status(400).json({ error: 'Invalid action' });
+    }
+
+    const order = await Order.findByIdAndUpdate(
+      id,
+      { status, updatedAt: Date.now() },
+      { new: true, runValidators: true }
+    );
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // If status changed to 'delivered', update the related Request's requestStage
+    if (status === 'delivered' && order.tenderId) {
+      // First, get the Tender to find the requestId
+      const Tender = require('../models/Tender');
+      const Request = require('../models/TenderRequest');
+      
+      const tender = await Tender.findById(order.tenderId);
+      if (tender && tender.requestId) {
+        // Update the Request's requestStage to 'delivered'
+        await Request.findByIdAndUpdate(
+          tender.requestId,
+          { requestStage: 'delivered', updatedAt: Date.now() },
+          { new: true, runValidators: true }
+        );
+      }
+    }
+
+    res.json(order);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Get all approved orders
+exports.getApprovedOrders = async (req, res) => {
+  try {
+    const approvedOrders = await Order.find({ status: 'approved' })
+      .populate('tenderId')
+      .populate('userId');
+      
+    res.json(approvedOrders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

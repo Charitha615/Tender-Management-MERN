@@ -39,7 +39,7 @@ const RequestSchema = new mongoose.Schema({
   },
   requestStage: {
     type: String,
-    enum: ['HOD', 'Logistics Officer', 'Warehouse Officer', 'Rector', 'Procurement Officer'],
+    enum: ['HOD', 'Logistics Officer', 'Warehouse Officer', 'Rector', 'Procurement Officer','delivered'],
     default: 'HOD'
   },
   isApproved: {

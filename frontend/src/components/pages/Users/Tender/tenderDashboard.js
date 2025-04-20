@@ -190,18 +190,43 @@ const TenderDashboard = () => {
         specialRequirements: ''
     });
 
-    useEffect(() => {
-        fetchTenders();
-    }, []);
+    // Function to update tender status based on dates
+    const updateTenderStatus = (tendersList) => {
+        const now = new Date();
+        return tendersList.map(tender => {
+            const startingDate = new Date(tender.startingDate);
+            const closingDate = new Date(tender.closingDate);
+            
+            let status = tender.status;
+            
+            // Only update status if it's not already manually set to 'cancelled'
+            if (tender.status !== 'cancelled') {
+                if (now < startingDate) {
+                    status = 'upcoming';
+                } else if (now >= startingDate && now <= closingDate) {
+                    status = 'active';
+                } else if (now > closingDate) {
+                    status = 'closed';
+                }
+            }
+            
+            return {
+                ...tender,
+                status
+            };
+        });
+    };
 
     const fetchTenders = async () => {
         try {
             const response = await api.get('/api/tenders');
-            setTenders(response.data.data.tenders);
-            setFilteredTenders(response.data.data.tenders);
+            // Update status based on current date
+            const updatedTenders = updateTenderStatus(response.data.data.tenders);
+            setTenders(updatedTenders);
+            setFilteredTenders(updatedTenders);
 
             // Extract unique categories
-            const uniqueCategories = [...new Set(response.data.data.tenders.map(t => t.category))];
+            const uniqueCategories = [...new Set(updatedTenders.map(t => t.category))];
             setCategories(uniqueCategories);
 
         } catch (error) {
@@ -218,6 +243,21 @@ const TenderDashboard = () => {
     };
 
     useEffect(() => {
+        fetchTenders();
+        
+        // Set up interval to check tender status every hour
+        const intervalId = setInterval(() => {
+            setTenders(prevTenders => {
+                const updatedTenders = updateTenderStatus(prevTenders);
+                setFilteredTenders(updatedTenders);
+                return updatedTenders;
+            });
+        }, 3600000); // 1 hour in milliseconds
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    useEffect(() => {
         applyFilters();
     }, [searchQuery, selectedCategory, dateFilter, tenders]);
 
@@ -230,17 +270,12 @@ const TenderDashboard = () => {
         }
 
         // Apply date filter
-        const now = new Date();
         if (dateFilter === 'active') {
-            result = result.filter(tender => {
-                const closingDate = new Date(tender.closingDate);
-                const startingDate = new Date(tender.startingDate);
-                return startingDate <= now && closingDate >= now;
-            });
+            result = result.filter(tender => tender.status === 'active');
         } else if (dateFilter === 'upcoming') {
-            result = result.filter(tender => new Date(tender.startingDate) > now);
+            result = result.filter(tender => tender.status === 'upcoming');
         } else if (dateFilter === 'closed') {
-            result = result.filter(tender => new Date(tender.closingDate) < now);
+            result = result.filter(tender => tender.status === 'closed');
         }
 
         // Apply search filter
@@ -271,10 +306,35 @@ const TenderDashboard = () => {
     };
 
     const handleViewDetails = (tender) => {
-        setSelectedTender(tender);
+        // Check if tender is closed before allowing view
+        const now = new Date();
+        const closingDate = new Date(tender.closingDate);
+        
+        // Update status if needed
+        let updatedTender = tender;
+        if (tender.status !== 'cancelled') {
+            if (now > closingDate && tender.status !== 'closed') {
+                updatedTender = {
+                    ...tender,
+                    status: 'closed'
+                };
+            } else if (now >= new Date(tender.startingDate) && now <= closingDate && tender.status !== 'active') {
+                updatedTender = {
+                    ...tender,
+                    status: 'active'
+                };
+            } else if (now < new Date(tender.startingDate) && tender.status !== 'upcoming') {
+                updatedTender = {
+                    ...tender,
+                    status: 'upcoming'
+                };
+            }
+        }
+        
+        setSelectedTender(updatedTender);
         setOrderDetails(prev => ({
             ...prev,
-            unitPrice: tender.estimatedPrice || 0
+            unitPrice: updatedTender.estimatedPrice || 0
         }));
         setOpenDialog(true);
     };
@@ -425,7 +485,6 @@ const TenderDashboard = () => {
 
             const response = await api.post('/api/orders', orderData);
 
-
             Swal.fire({
                 title: 'Order Placed!',
                 text: 'Your order has been submitted successfully',
@@ -523,7 +582,7 @@ const TenderDashboard = () => {
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent'
                         }}>
-                            Tender Dashboard
+                            Supplier Dashboard
                         </Typography>
                     </Box>
 
@@ -533,7 +592,7 @@ const TenderDashboard = () => {
                         <Button
                             color="inherit"
                             startIcon={<HomeIcon />}
-                            onClick={() => navigate('/dashboard')}
+                            onClick={() => navigate('/supplier-dashboard')}
                             sx={{
                                 '&:hover': {
                                     background: 'rgba(255,255,255,0.1)',
@@ -544,7 +603,7 @@ const TenderDashboard = () => {
                         >
                             Home
                         </Button>
-                        <Button
+                        {/* <Button
                             color="inherit"
                             startIcon={<StatsIcon />}
                             onClick={() => navigate('/statistics')}
@@ -571,7 +630,7 @@ const TenderDashboard = () => {
                             }}
                         >
                             Features
-                        </Button>
+                        </Button> */}
                         <Button
                             color="inherit"
                             startIcon={<LogoutIcon />}
@@ -787,7 +846,7 @@ const TenderDashboard = () => {
                                                             >
                                                                 <DetailsIcon />
                                                             </IconButton>
-                                                            {tender.status === 'active' && (
+                                                            {tender.status === 'active' ? (
                                                                 <IconButton
                                                                     onClick={() => handleViewDetails(tender)}
                                                                     sx={{
@@ -795,6 +854,18 @@ const TenderDashboard = () => {
                                                                         background: 'rgba(76, 175, 80, 0.1)',
                                                                         '&:hover': { background: 'rgba(76, 175, 80, 0.2)' }
                                                                     }}
+                                                                >
+                                                                    <OrderIcon />
+                                                                </IconButton>
+                                                            ) : (
+                                                                <IconButton
+                                                                    disabled
+                                                                    sx={{
+                                                                        color: 'text.disabled',
+                                                                        background: 'rgba(158, 158, 158, 0.1)',
+                                                                        cursor: 'not-allowed'
+                                                                    }}
+                                                                    title={tender.status === 'closed' ? 'This tender is closed' : tender.status === 'upcoming' ? 'This tender is not yet active' : 'This tender is cancelled'}
                                                                 >
                                                                     <OrderIcon />
                                                                 </IconButton>
@@ -1599,7 +1670,11 @@ const TenderDashboard = () => {
                                                     This tender is {selectedTender.status}
                                                 </Typography>
                                                 <Typography variant="body2" sx={{ mt: 1 }}>
-                                                    Orders can only be placed for active tenders
+                                                    {selectedTender.status === 'closed' 
+                                                        ? 'The tender has closed and no longer accepts orders.'
+                                                        : selectedTender.status === 'upcoming'
+                                                        ? 'The tender is not yet active. Please check back later.'
+                                                        : 'This tender has been cancelled and is not accepting orders.'}
                                                 </Typography>
                                             </Box>
                                         )}

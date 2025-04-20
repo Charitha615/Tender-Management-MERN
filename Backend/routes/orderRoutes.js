@@ -19,4 +19,9 @@ router.get('/tender/:tenderId', orderController.getOrdersByTender);
 // Status update
 router.patch('/:id/status',  orderController.updateOrderStatus);
 
+router.patch('/:id/:action', orderController.updateOrderStatusByAction);
+
+router.get('/status/approved', orderController.getApprovedOrders);
+
+
 module.exports = router;

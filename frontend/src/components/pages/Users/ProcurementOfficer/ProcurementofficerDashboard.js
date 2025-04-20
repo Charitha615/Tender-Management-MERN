@@ -337,7 +337,7 @@ const ProcurementDashboard = () => {
             try {
                 const userId = localStorage.getItem('userId');
                 await api.post(`/api/procurement/approve/${requestId}`, {
-                    procurementIsApproved: true,
+                    ProcurementisApproved: true,
                     procurementUserID: userId
                 });
 
@@ -721,17 +721,17 @@ const ProcurementDashboard = () => {
                                                             {tabValue !== 3 && (
                                                                 <Chip
                                                                     label={
-                                                                        request.procurementIsApproved === null
+                                                                        request.ProcurementisApproved === null
                                                                             ? 'Rejected'
-                                                                            : request.procurementIsApproved
+                                                                            : request.ProcurementisApproved
                                                                                 ? 'Approved'
                                                                                 : 'Pending'
                                                                     }
                                                                     size="small"
                                                                     color={
-                                                                        request.procurementIsApproved === null
+                                                                        request.ProcurementisApproved === null
                                                                             ? 'error'
-                                                                            : request.procurementIsApproved
+                                                                            : request.ProcurementisApproved
                                                                                 ? 'success'
                                                                                 : 'warning'
                                                                     }
@@ -868,17 +868,17 @@ const ProcurementDashboard = () => {
                                     />
                                     <Chip
                                         label={
-                                            selectedRequest.procurementIsApproved === null
+                                            selectedRequest.ProcurementisApproved === null
                                                 ? 'Rejected'
-                                                : selectedRequest.procurementIsApproved
+                                                : selectedRequest.ProcurementisApproved
                                                     ? 'Approved'
                                                     : 'Pending'
                                         }
                                         size="small"
                                         color={
-                                            selectedRequest.procurementIsApproved === null
+                                            selectedRequest.ProcurementisApproved === null
                                                 ? 'error'
-                                                : selectedRequest.procurementIsApproved
+                                                : selectedRequest.ProcurementisApproved
                                                     ? 'success'
                                                     : 'warning'
                                         }
