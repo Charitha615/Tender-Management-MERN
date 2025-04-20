@@ -28,6 +28,8 @@ const logisticsRoutes = require('./routes/logisticsRoutes');
 const rectorRoutes = require('./routes/rectorRoute');
 const procurementRoute = require('./routes/procurementRoute');
 const tenderRoutes = require('./routes/tenderRoutes');  
+const orderRoutes = require('./routes/orderRoutes');  
+
 
 
 // Routes
@@ -37,6 +39,8 @@ app.use('/api/logistics', logisticsRoutes);
 app.use('/api/rector', rectorRoutes);
 app.use('/api/procurement', procurementRoute);
 app.use('/api/tenders', tenderRoutes);
+app.use('/api/orders', orderRoutes);
+
 
 
 // Start server

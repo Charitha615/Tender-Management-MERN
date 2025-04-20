@@ -484,7 +484,7 @@ const ProcurementDashboard = () => {
                         <Button
                             color="inherit"
                             startIcon={<HomeIcon />}
-                            onClick={() => navigate('/procurement-dashboard')}
+                            onClick={() => navigate('/procurement-officer-dashboard')}
                             sx={{
                                 '&:hover': {
                                     background: 'rgba(255,255,255,0.1)',
@@ -498,7 +498,7 @@ const ProcurementDashboard = () => {
                         <Button
                             color="inherit"
                             startIcon={<StatsIcon />}
-                            onClick={() => navigate('/procurement-statistics')}
+                            onClick={() => navigate('/procurement-tenders')}
                             sx={{
                                 '&:hover': {
                                     background: 'rgba(255,255,255,0.1)',

@@ -9,7 +9,13 @@ import LogisticsDashboard from './components/pages/Users/Logistics/LogisticsDash
 import LogisticsFeatures from './components/pages/Users/Logistics/LogisticsFeatures';
 
 import RectorDashboard from './components/pages/Users/Rector/RectorDashboard';
+
+
 import ProcurementOfficer from './components/pages/Users/ProcurementOfficer/ProcurementofficerDashboard';
+import TendersPage from './components/pages/Users/ProcurementOfficer/TendersPage';
+
+import TenderDashboard from './components/pages/Users/Tender/tenderDashboard';
+
 
 
 function App() {
@@ -36,6 +42,11 @@ function App() {
 
        {/* Procurement Officer */}
        <Route path="/procurement-officer-dashboard" element={<ProcurementOfficer />} />
+       <Route path="/procurement-tenders" element={<TendersPage />} />
+
+       {/* Tender Dashbaord */}
+       <Route path="/supplier-dashboard" element={<TenderDashboard />} />
+
 
       </Routes>
     </Router>
