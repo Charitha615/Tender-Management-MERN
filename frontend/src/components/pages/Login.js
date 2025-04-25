@@ -108,12 +108,12 @@ const Login = () => {
       >
         <Box sx={{ textAlign: 'center', maxWidth: '600px' }}>
           <Typography variant="h2" component="h1" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
-            Welcome to the Campus Tendering System
+          General Sir John Kotelawala Defence University Southern campus 
           </Typography>
           <Typography variant="h5" sx={{ lineHeight: 1.6, mb: 4 }}>
-            Join us and streamline your procurement process with the next generation of campus tendering solutions.
+          Tender Management System
           </Typography>
-          <Button
+          {/* <Button
             variant="outlined"
             sx={{
               color: 'white',
@@ -125,7 +125,7 @@ const Login = () => {
             }}
           >
             Learn More
-          </Button>
+          </Button> */}
         </Box>
       </Box>
 
