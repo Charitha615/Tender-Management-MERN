@@ -281,6 +281,7 @@ const ProcurementDashboard = () => {
 
     const handleSubmitTender = async () => {
         if (!tenderForm.title || !tenderForm.startingDate || !tenderForm.closingDate) {
+            setOpenTenderDialog(false);
             Swal.fire({
                 icon: 'error',
                 title: 'Missing Information',
@@ -311,6 +312,7 @@ const ProcurementDashboard = () => {
             setOpenTenderDialog(false);
             fetchPendingRequests();
         } catch (error) {
+            setOpenTenderDialog(false);
             Swal.fire({
                 title: 'Error',
                 text: error.response?.data?.message || 'Failed to create tender',
@@ -507,9 +509,9 @@ const ProcurementDashboard = () => {
                                 transition: 'all 0.3s ease'
                             }}
                         >
-                            Statistics
+                            All Tenders
                         </Button>
-                        <Button
+                        {/* <Button
                             color="inherit"
                             startIcon={<FeaturesIcon />}
                             onClick={() => navigate('/procurement-features')}
@@ -522,7 +524,7 @@ const ProcurementDashboard = () => {
                             }}
                         >
                             Features
-                        </Button>
+                        </Button> */}
                         <Button
                             color="inherit"
                             startIcon={<LogoutIcon />}
@@ -779,7 +781,7 @@ const ProcurementDashboard = () => {
                                                                 </IconButton>
                                                             </>
                                                         )}
-                                                        {tabValue === 1 && selectedRequest?.Tender !== true && (
+                                                        {tabValue === 1 && (
                                                             <IconButton
                                                                 onClick={() => handleCreateTender(request)}
                                                                 sx={{
@@ -1781,7 +1783,7 @@ const ProcurementDashboard = () => {
                     </MenuItem>
 
                 )}
-                {tabValue === 1 && selectedRequest?.Tender !== true && (
+                {tabValue === 1 && (
                     <MenuItem onClick={() => {
                         handleCreateTender(selectedRequest);
                         handleMenuClose();

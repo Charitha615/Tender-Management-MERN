@@ -377,7 +377,7 @@ const LogisticsDashboard = () => {
                 transition: 'all 0.3s ease'
               }}
             >
-              Features
+              Approved Orders
             </Button>
             <Button
               color="inherit"

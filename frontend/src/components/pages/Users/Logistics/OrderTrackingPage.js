@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import autoTable from 'jspdf-autotable';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Container, 
-  Card, 
-  CardContent, 
-  Typography, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
+import {
+  Container,
+  Card,
+  CardContent,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Paper,
   Chip,
   Button,
@@ -25,9 +26,12 @@ import {
   LinearProgress,
   IconButton,
   Tooltip,
-  Avatar
+  Avatar,
+  Menu,
+  MenuItem,
+  ListItemIcon
 } from '@mui/material';
-import { 
+import {
   CheckCircle as CheckCircleIcon,
   Payment as PaymentIcon,
   CalendarToday as CalendarIcon,
@@ -37,11 +41,18 @@ import {
   LocalShipping as LocalShippingIcon,
   Business as BusinessIcon,
   Assignment as AssignmentIcon,
-  Description as DescriptionIcon
+  Description as DescriptionIcon,
+  PictureAsPdf as PdfIcon,
+  Print as PrintIcon,
+  MoreVert as MoreVertIcon,
+  FileDownload as FileDownloadIcon
 } from '@mui/icons-material';
 import api from '../../../api';
 import Swal from 'sweetalert2';
 import { format, differenceInDays, parseISO } from 'date-fns';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 
 const OrderTrackingPage = () => {
   const [orders, setOrders] = useState([]);
@@ -51,6 +62,8 @@ const OrderTrackingPage = () => {
   const [openPaymentDialog, setOpenPaymentDialog] = useState(false);
   const [completionNotes, setCompletionNotes] = useState('');
   const [paymentAmount, setPaymentAmount] = useState(0);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedOrderForMenu, setSelectedOrderForMenu] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -65,7 +78,7 @@ const OrderTrackingPage = () => {
         const now = new Date();
         const deliveryDate = new Date(order.deliveryDate);
         const daysRemaining = differenceInDays(deliveryDate, now);
-        
+
         return {
           ...order,
           daysRemaining: daysRemaining > 0 ? daysRemaining : 0,
@@ -144,6 +157,174 @@ const OrderTrackingPage = () => {
     }
   };
 
+  const handleMenuClick = (event, order) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedOrderForMenu(order);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedOrderForMenu(null);
+  };
+
+  const generatePDF = (order) => {
+    const doc = new jsPDF();
+
+    // Add title
+    doc.setFontSize(18);
+    doc.text(`Order Details - ${order.tenderId?.referenceNo}`, 14, 20);
+
+    // Add order information
+    doc.setFontSize(12);
+    doc.text('Order Information', 14, 35);
+
+    let yPosition = 45;
+    doc.text(`Order ID: ${order._id}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Tender Reference: ${order.tenderId?.referenceNo}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Created Date: ${format(parseISO(order.createdAt), 'PPpp')}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Status: ${order.status}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Payment Status: ${order.paymentStatus}`, 14, yPosition);
+    yPosition += 15;
+
+    // Add product details
+    doc.text('Product Details', 14, yPosition);
+    yPosition += 10;
+    doc.text(`Product Name: ${order.tenderId?.title}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Description: ${order.tenderId?.details}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Category: ${order.tenderId?.category}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Quantity: ${order.quantity}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Unit Price: $${order.unitPrice?.toFixed(2) || '0.00'}`, 14, yPosition);
+    yPosition += 15;
+
+    // Add supplier information
+    doc.text('Supplier Information', 14, yPosition);
+    yPosition += 10;
+    doc.text(`Supplier: ${order.userId?.companyName || order.userId?.fullName}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Contact Person: ${order.userId?.contactPersonName || order.userId?.fullName}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Phone: ${order.userId?.phoneNumber}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Address: ${order.userId?.companyAddress || order.userId?.address}`, 14, yPosition);
+    yPosition += 15;
+
+    // Add delivery and payment info
+    doc.text('Delivery & Payment', 14, yPosition);
+    yPosition += 10;
+    doc.text(`Delivery Date: ${format(parseISO(order.deliveryDate), 'PPpp')}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Days Remaining: ${order.daysRemaining > 0 ? order.daysRemaining : 0}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Delivery Method: ${order.freeDelivery ? 'Free Delivery' : `Paid Delivery ($${order.deliveryCost?.toFixed(2) || '0.00'})`}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Total Amount: $${order.totalAmount?.toFixed(2) || '0.00'}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Amount Paid: $${order.amountPaid?.toFixed(2) || '0.00'}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Amount Due: $${order.amountDue?.toFixed(2) || '0.00'}`, 14, yPosition);
+    yPosition += 15;
+
+    // Add additional info
+    doc.text('Additional Information', 14, yPosition);
+    yPosition += 10;
+    doc.text(`Special Requirements: ${order.specialRequirements || 'None'}`, 14, yPosition);
+    yPosition += 10;
+    doc.text(`Notes: ${order.notes || 'None'}`, 14, yPosition);
+
+    // Save the PDF
+    doc.save(`order_${order.tenderId?.referenceNo}.pdf`);
+    handleMenuClose();
+  };
+
+  const generatePDFFromHTML = async (order) => {
+    const element = document.getElementById('order-details-dialog-content');
+    if (!element) return;
+
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        scrollY: -window.scrollY
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`order_${order.tenderId?.referenceNo}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to generate PDF from content',
+      });
+    }
+
+    handleMenuClose();
+  };
+
+  const generateTablePDF = () => {
+    const doc = new jsPDF();
+
+    // Add title
+    doc.setFontSize(18);
+    doc.text('Approved Orders Report', 14, 20);
+
+    // Define the columns for the table
+    const columns = [
+      { header: 'Order Ref', dataKey: 'orderRef' },
+      { header: 'Product', dataKey: 'product' },
+      { header: 'Supplier', dataKey: 'supplier' },
+      { header: 'Quantity', dataKey: 'quantity' },
+      { header: 'Delivery Date', dataKey: 'deliveryDate' },
+      { header: 'Amount Due', dataKey: 'amountDue' },
+    ];
+
+    // Transform the orders data into the format needed for the PDF
+    const rows = orders.map(order => ({
+      orderRef: order.tenderId?.referenceNo || 'N/A',
+      product: order.tenderId?.title || 'N/A',
+      supplier: order.userId?.companyName || order.userId?.fullName || 'N/A',
+      quantity: order.quantity,
+      deliveryDate: format(parseISO(order.deliveryDate), 'PP'),
+      amountDue: `$${order.amountDue.toFixed(2)}`
+    }));
+
+    // Create the PDF table
+    autoTable(doc, {
+      head: [columns.map(col => col.header)],
+      body: rows.map(row => columns.map(col => row[col.dataKey])),
+      startY: 30,
+      theme: 'grid',
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 30 },
+        6: { cellWidth: 25 }
+      }
+    });
+
+    // Save the PDF
+    doc.save('approved_orders_report.pdf');
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4 }}>
@@ -161,6 +342,15 @@ const OrderTrackingPage = () => {
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
         Track your approved orders and manage deliveries
       </Typography>
+
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={generateTablePDF}
+        startIcon={<FileDownloadIcon />}
+      >
+        Export PDF
+      </Button>
 
       {orders.length === 0 ? (
         <Card sx={{ mt: 3 }}>
@@ -253,6 +443,14 @@ const OrderTrackingPage = () => {
                           <DoneAllIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
+                      <Tooltip title="More options">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleMenuClick(e, order)}
+                        >
+                          <MoreVertIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -273,11 +471,18 @@ const OrderTrackingPage = () => {
           <>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6">Order Details - {selectedOrder.tenderId?.referenceNo}</Typography>
-              <IconButton onClick={() => setSelectedOrder(null)}>
-                <CloseIcon />
-              </IconButton>
+              <Box>
+                <Tooltip title="Download as PDF">
+                  <IconButton onClick={() => generatePDF(selectedOrder)}>
+                    <PdfIcon />
+                  </IconButton>
+                </Tooltip>
+                <IconButton onClick={() => setSelectedOrder(null)}>
+                  <CloseIcon />
+                </IconButton>
+              </Box>
             </DialogTitle>
-            <DialogContent dividers>
+            <DialogContent dividers id="order-details-dialog-content">
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -286,66 +491,66 @@ const OrderTrackingPage = () => {
                       Order Information
                     </Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Order ID</Typography>
                     <Typography>{selectedOrder._id}</Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Tender Reference</Typography>
                     <Typography>{selectedOrder.tenderId?.referenceNo}</Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Created Date</Typography>
                     <Typography>{format(parseISO(selectedOrder.createdAt), 'PPpp')}</Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Status</Typography>
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Chip 
-                        label={selectedOrder.status} 
+                      <Chip
+                        label={selectedOrder.status}
                         color={
-                          selectedOrder.status === 'approved' ? 'success' : 
-                          selectedOrder.status === 'completed' ? 'primary' : 'default'
-                        } 
-                        size="small" 
+                          selectedOrder.status === 'approved' ? 'success' :
+                            selectedOrder.status === 'completed' ? 'primary' : 'default'
+                        }
+                        size="small"
                       />
                       {getPaymentStatusChip(selectedOrder)}
                     </Box>
                   </Box>
-                  
+
                   <Divider sx={{ my: 2 }} />
-                  
+
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <DescriptionIcon sx={{ mr: 1, color: 'primary.main' }} />
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                       Product Details
                     </Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Product Name</Typography>
                     <Typography>{selectedOrder.tenderId?.title}</Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Description</Typography>
                     <Typography>{selectedOrder.tenderId?.details}</Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Category</Typography>
                     <Typography>{selectedOrder.tenderId?.category}</Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Quantity</Typography>
                     <Typography>{selectedOrder.quantity}</Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Unit Price</Typography>
                     <Typography>${selectedOrder.unitPrice?.toFixed(2) || '0.00'}</Typography>
@@ -359,7 +564,7 @@ const OrderTrackingPage = () => {
                       Supplier Information
                     </Typography>
                   </Box>
-                  
+
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <Avatar sx={{ width: 40, height: 40, mr: 2 }}>
                       {selectedOrder.userId?.fullName?.charAt(0) || 'S'}
@@ -373,31 +578,31 @@ const OrderTrackingPage = () => {
                       </Typography>
                     </Box>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Contact Person</Typography>
                     <Typography>{selectedOrder.userId?.contactPersonName || selectedOrder.userId?.fullName}</Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Phone Number</Typography>
                     <Typography>{selectedOrder.userId?.phoneNumber}</Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Address</Typography>
                     <Typography>{selectedOrder.userId?.companyAddress || selectedOrder.userId?.address}</Typography>
                   </Box>
-                  
+
                   <Divider sx={{ my: 2 }} />
-                  
+
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <LocalShippingIcon sx={{ mr: 1, color: 'primary.main' }} />
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                       Delivery & Payment
                     </Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Delivery Date</Typography>
                     <Typography>
@@ -407,31 +612,31 @@ const OrderTrackingPage = () => {
                       )}
                     </Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Days Remaining</Typography>
                     <Typography>
                       {selectedOrder.daysRemaining > 0 ? selectedOrder.daysRemaining : 0}
                     </Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Delivery Method</Typography>
                     <Typography>
                       {selectedOrder.freeDelivery ? 'Free Delivery' : `Paid Delivery ($${selectedOrder.deliveryCost?.toFixed(2) || '0.00'})`}
                     </Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Total Amount</Typography>
                     <Typography>${selectedOrder.totalAmount?.toFixed(2) || '0.00'}</Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Amount Paid</Typography>
                     <Typography>${selectedOrder.amountPaid?.toFixed(2) || '0.00'}</Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Amount Due</Typography>
                     <Typography>${selectedOrder.amountDue?.toFixed(2) || '0.00'}</Typography>
@@ -446,12 +651,12 @@ const OrderTrackingPage = () => {
                       Additional Information
                     </Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Special Requirements</Typography>
                     <Typography>{selectedOrder.specialRequirements || 'None'}</Typography>
                   </Box>
-                  
+
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary">Notes</Typography>
                     <Typography>{selectedOrder.notes || 'None'}</Typography>
@@ -460,6 +665,14 @@ const OrderTrackingPage = () => {
               </Grid>
             </DialogContent>
             <DialogActions>
+              <Button
+                onClick={() => generatePDF(selectedOrder)}
+                startIcon={<PdfIcon />}
+                variant="outlined"
+                color="error"
+              >
+                Download PDF
+              </Button>
               <Button onClick={() => setSelectedOrder(null)}>Close</Button>
             </DialogActions>
           </>
@@ -499,7 +712,7 @@ const OrderTrackingPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenCompleteDialog(false)}>Cancel</Button>
-          <Button 
+          <Button
             onClick={handleCompleteOrder}
             variant="contained"
             color="success"
@@ -562,7 +775,7 @@ const OrderTrackingPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenPaymentDialog(false)}>Cancel</Button>
-          <Button 
+          <Button
             onClick={handleRecordPayment}
             variant="contained"
             color="primary"
@@ -573,6 +786,39 @@ const OrderTrackingPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* More Options Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={() => {
+          setSelectedOrder(selectedOrderForMenu);
+          handleMenuClose();
+        }}>
+          <ListItemIcon>
+            <InfoIcon fontSize="small" />
+          </ListItemIcon>
+          View Details
+        </MenuItem>
+        <MenuItem onClick={() => {
+          generatePDF(selectedOrderForMenu);
+        }}>
+          <ListItemIcon>
+            <PdfIcon fontSize="small" />
+          </ListItemIcon>
+          Download as PDF
+        </MenuItem>
+        {/* <MenuItem onClick={() => {
+          generatePDFFromHTML(selectedOrderForMenu);
+        }}>
+          <ListItemIcon>
+            <PrintIcon fontSize="small" />
+          </ListItemIcon>
+          Print
+        </MenuItem> */}
+      </Menu>
     </Container>
   );
 };

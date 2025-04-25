@@ -400,7 +400,7 @@ exports.approveRequestRector = async (req, res) => {
   try {
 
     const request = await Request.findByIdAndUpdate(
-      req.params.id,  
+      req.params.id,
       {
         isApproved: false,
         requestStage: 'Procurement Officer',
@@ -628,14 +628,15 @@ exports.approveRequestProcurementOfficer = async (req, res) => {
     console.log('Incoming body:', req.body); // Debug log
 
     const request = await Request.findByIdAndUpdate(
-      req.params.id,  
+      req.params.id,
       {
         isApproved: true,
         requestStage: 'Procurement Officer',
         updatedAt: Date.now(),
         ProcurementisApproved: req.body.procurementIsApproved,
         ProcurementcreatedAt: Date.now(),
-        ProcurementUserID: req.body.procurementUserID
+        ProcurementUserID: req.body.procurementUserID,
+        ProcurementisApproved: true
       },
       { new: true, runValidators: true } // Added runValidators
     );

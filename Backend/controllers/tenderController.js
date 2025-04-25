@@ -25,6 +25,12 @@ exports.createTender = catchAsync(async (req, res, next) => {
     return next(new AppError('No request found with that ID', 404));
   }
 
+  // Check if a tender already exists for this requestId with status "active"
+  const existingTender = await Tender.findOne({ requestId, status: 'active' });
+  if (existingTender) {
+    return next(new AppError('An active tender already exists for this request', 400));
+  }
+
   // Create tender
   const newTender = await Tender.create({
     title,
@@ -45,6 +51,7 @@ exports.createTender = catchAsync(async (req, res, next) => {
     }
   });
 });
+
 
 exports.getAllTenders = catchAsync(async (req, res, next) => {  
   try {
