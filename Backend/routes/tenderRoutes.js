@@ -10,6 +10,8 @@ router
 router.get('/count', tenderController.getTenderCount);
 router.get('/status/:status', tenderController.getTendersByStatus);
 
+router.get('/getAllTendersWithOrders', tenderController.getAllTendersWithOrders);
+
 router
   .route('/:id')
   .get(tenderController.getTender)

@@ -372,7 +372,7 @@ const RectorDashboard = () => {
             >
               Home
             </Button>
-            <Button
+            {/* <Button
               color="inherit"
               startIcon={<StatsIcon />}
               onClick={() => navigate('/rector-statistics')}
@@ -399,7 +399,7 @@ const RectorDashboard = () => {
               }}
             >
               Features
-            </Button>
+            </Button> */}
             <Button
               color="inherit"
               startIcon={<LogoutIcon />}

@@ -281,6 +281,7 @@ const ProcurementDashboard = () => {
 
     const handleSubmitTender = async () => {
         if (!tenderForm.title || !tenderForm.startingDate || !tenderForm.closingDate) {
+            setOpenTenderDialog(false);
             Swal.fire({
                 icon: 'error',
                 title: 'Missing Information',
@@ -311,6 +312,7 @@ const ProcurementDashboard = () => {
             setOpenTenderDialog(false);
             fetchPendingRequests();
         } catch (error) {
+            setOpenTenderDialog(false);
             Swal.fire({
                 title: 'Error',
                 text: error.response?.data?.message || 'Failed to create tender',
@@ -337,7 +339,7 @@ const ProcurementDashboard = () => {
             try {
                 const userId = localStorage.getItem('userId');
                 await api.post(`/api/procurement/approve/${requestId}`, {
-                    procurementIsApproved: true,
+                    ProcurementisApproved: true,
                     procurementUserID: userId
                 });
 
@@ -484,7 +486,7 @@ const ProcurementDashboard = () => {
                         <Button
                             color="inherit"
                             startIcon={<HomeIcon />}
-                            onClick={() => navigate('/procurement-dashboard')}
+                            onClick={() => navigate('/procurement-officer-dashboard')}
                             sx={{
                                 '&:hover': {
                                     background: 'rgba(255,255,255,0.1)',
@@ -498,7 +500,7 @@ const ProcurementDashboard = () => {
                         <Button
                             color="inherit"
                             startIcon={<StatsIcon />}
-                            onClick={() => navigate('/procurement-statistics')}
+                            onClick={() => navigate('/procurement-tenders')}
                             sx={{
                                 '&:hover': {
                                     background: 'rgba(255,255,255,0.1)',
@@ -507,9 +509,9 @@ const ProcurementDashboard = () => {
                                 transition: 'all 0.3s ease'
                             }}
                         >
-                            Statistics
+                            All Tenders
                         </Button>
-                        <Button
+                        {/* <Button
                             color="inherit"
                             startIcon={<FeaturesIcon />}
                             onClick={() => navigate('/procurement-features')}
@@ -522,7 +524,7 @@ const ProcurementDashboard = () => {
                             }}
                         >
                             Features
-                        </Button>
+                        </Button> */}
                         <Button
                             color="inherit"
                             startIcon={<LogoutIcon />}
@@ -721,17 +723,17 @@ const ProcurementDashboard = () => {
                                                             {tabValue !== 3 && (
                                                                 <Chip
                                                                     label={
-                                                                        request.procurementIsApproved === null
+                                                                        request.ProcurementisApproved === null
                                                                             ? 'Rejected'
-                                                                            : request.procurementIsApproved
+                                                                            : request.ProcurementisApproved
                                                                                 ? 'Approved'
                                                                                 : 'Pending'
                                                                     }
                                                                     size="small"
                                                                     color={
-                                                                        request.procurementIsApproved === null
+                                                                        request.ProcurementisApproved === null
                                                                             ? 'error'
-                                                                            : request.procurementIsApproved
+                                                                            : request.ProcurementisApproved
                                                                                 ? 'success'
                                                                                 : 'warning'
                                                                     }
@@ -779,7 +781,7 @@ const ProcurementDashboard = () => {
                                                                 </IconButton>
                                                             </>
                                                         )}
-                                                        {tabValue === 1 && selectedRequest?.Tender !== true && (
+                                                        {tabValue === 1 && (
                                                             <IconButton
                                                                 onClick={() => handleCreateTender(request)}
                                                                 sx={{
@@ -868,17 +870,17 @@ const ProcurementDashboard = () => {
                                     />
                                     <Chip
                                         label={
-                                            selectedRequest.procurementIsApproved === null
+                                            selectedRequest.ProcurementisApproved === null
                                                 ? 'Rejected'
-                                                : selectedRequest.procurementIsApproved
+                                                : selectedRequest.ProcurementisApproved
                                                     ? 'Approved'
                                                     : 'Pending'
                                         }
                                         size="small"
                                         color={
-                                            selectedRequest.procurementIsApproved === null
+                                            selectedRequest.ProcurementisApproved === null
                                                 ? 'error'
-                                                : selectedRequest.procurementIsApproved
+                                                : selectedRequest.ProcurementisApproved
                                                     ? 'success'
                                                     : 'warning'
                                         }
@@ -1781,7 +1783,7 @@ const ProcurementDashboard = () => {
                     </MenuItem>
 
                 )}
-                {tabValue === 1 && selectedRequest?.Tender !== true && (
+                {tabValue === 1 && (
                     <MenuItem onClick={() => {
                         handleCreateTender(selectedRequest);
                         handleMenuClose();

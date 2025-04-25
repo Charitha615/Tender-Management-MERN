@@ -4,6 +4,7 @@ const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const TenderRequest = require('../models/TenderRequest');
 const User = require('../models/User');
+const Order = require('../models/OrderModel');
 
 // Create a new tender
 exports.createTender = catchAsync(async (req, res, next) => {
@@ -22,6 +23,12 @@ exports.createTender = catchAsync(async (req, res, next) => {
   const request = await Request.findById(requestId);
   if (!request) {
     return next(new AppError('No request found with that ID', 404));
+  }
+
+  // Check if a tender already exists for this requestId with status "active"
+  const existingTender = await Tender.findOne({ requestId, status: 'active' });
+  if (existingTender) {
+    return next(new AppError('An active tender already exists for this request', 400));
   }
 
   // Create tender
@@ -44,6 +51,7 @@ exports.createTender = catchAsync(async (req, res, next) => {
     }
   });
 });
+
 
 exports.getAllTenders = catchAsync(async (req, res, next) => {  
   try {
@@ -143,4 +151,67 @@ exports.getTendersByStatus = catchAsync(async (req, res, next) => {
       tenders
     }
   });
+});
+
+// Get all tenders with their order details
+exports.getAllTendersWithOrders = catchAsync(async (req, res, next) => {
+  try {
+    // First get all tenders with populated request and creator info
+    const tenders = await Tender.find()
+      .populate('requestId')
+      .populate('createdBy');
+    
+    // Get all orders grouped by tenderId
+    const orders = await Order.aggregate([
+      {
+        $group: {
+          _id: '$tenderId',
+          orders: { $push: '$$ROOT' }
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'orders.userId',
+          foreignField: '_id',
+          as: 'userDetails'
+        }
+      }
+    ]);
+
+    // Create a map of tenderId to orders for quick lookup
+    const ordersMap = new Map();
+    orders.forEach(item => {
+      ordersMap.set(item._id.toString(), {
+        orders: item.orders,
+        userDetails: item.userDetails
+      });
+    });
+
+    // Combine tenders with their orders
+    const tendersWithOrders = tenders.map(tender => {
+      const tenderObj = tender.toObject();
+      const orderInfo = ordersMap.get(tender._id.toString()) || { orders: [], userDetails: [] };
+      
+      return {
+        ...tenderObj,
+        orders: orderInfo.orders.map(order => {
+          const user = orderInfo.userDetails.find(u => u._id.toString() === order.userId.toString());
+          return {
+            ...order,
+            userDetails: user || null
+          };
+        }),
+        orderCount: orderInfo.orders.length
+      };
+    });
+
+    res.status(200).json({
+      status: 'success',
+      results: tendersWithOrders.length,
+      data: { tenders: tendersWithOrders },
+    });
+  } catch (error) {
+    next(error);
+  }
 });

@@ -368,7 +368,7 @@ const LogisticsDashboard = () => {
             <Button
               color="inherit"
               startIcon={<FeaturesIcon />}
-              onClick={() => navigate('/logistics-features')}
+              onClick={() => navigate('/logistics/orders/tracking')}
               sx={{
                 '&:hover': {
                   background: 'rgba(255,255,255,0.1)',
@@ -377,7 +377,7 @@ const LogisticsDashboard = () => {
                 transition: 'all 0.3s ease'
               }}
             >
-              Features
+              Approved Orders
             </Button>
             <Button
               color="inherit"
