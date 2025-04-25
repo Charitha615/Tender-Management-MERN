@@ -136,10 +136,11 @@ const Register = () => {
       >
         <Box>
           <Typography variant="h3" component="h1" gutterBottom>
-            Welcome to the Campus Tendering System
+          General Sir John Kotelawala Defence University Southern campus 
+
           </Typography>
           <Typography variant="h6">
-            Join us and streamline your procurement process with the next generation of campus tendering solutions.
+          Tender Management System
           </Typography>
         </Box>
       </Box>
