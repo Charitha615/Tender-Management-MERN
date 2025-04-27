@@ -26,12 +26,15 @@ import {
   Chip,
   Card,
   CardContent,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
   DashboardOutlined,
   PeopleAltOutlined,
   PendingActionsOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  PictureAsPdf,
 } from '@mui/icons-material';
 import api from '../api';
 
@@ -47,12 +50,51 @@ const DialogItem = ({ label, value }) => (
   )
 );
 
+const PdfViewer = ({ base64Data }) => {
+  const [pdfUrl, setPdfUrl] = useState(null);
+
+  useEffect(() => {
+    if (base64Data) {
+      // Create a blob URL from the base64 data
+      const byteCharacters = atob(base64Data.split(',')[1]);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      setPdfUrl(url);
+
+      // Clean up the URL when component unmounts
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    }
+  }, [base64Data]);
+
+  if (!pdfUrl) return null;
+
+  return (
+    <Box sx={{ mt: 2, width: '100%', height: '500px' }}>
+      <iframe 
+        src={pdfUrl} 
+        width="100%" 
+        height="100%" 
+        title="PDF Viewer"
+        style={{ border: 'none' }}
+      />
+    </Box>
+  );
+};
+
 const SuperAdminDashboard = () => {
   const [viewMode, setViewMode] = useState('dashboard');
   const [pendingUsers, setPendingUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [showPdf, setShowPdf] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -108,10 +150,16 @@ const SuperAdminDashboard = () => {
   const handleViewDetails = (user) => {
     setSelectedUser(user);
     setOpenDialog(true);
+    setShowPdf(false);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
+    setShowPdf(false);
+  };
+
+  const handleViewPdf = () => {
+    setShowPdf(true);
   };
 
   const handleLogout = () => {
@@ -159,6 +207,18 @@ const SuperAdminDashboard = () => {
             <DialogItem label="Company Address" value={user.companyAddress} />
             <DialogItem label="Supplier Type" value={user.supplierType} />
             <DialogItem label="Contact Person" value={user.contactPersonName} />
+            {user.ministryOfDefenceDocument && (
+              <Grid item xs={12}>
+                <Button
+                  variant="outlined"
+                  startIcon={<PictureAsPdf />}
+                  onClick={handleViewPdf}
+                  sx={{ mt: 1 }}
+                >
+                  View Ministry of Defence Document
+                </Button>
+              </Grid>
+            )}
           </>
         );
       default:
@@ -376,61 +436,80 @@ const SuperAdminDashboard = () => {
         )}
 
         {/* Dialog to show full user details */}
-        <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="md">
+        <Dialog 
+          open={openDialog} 
+          onClose={handleCloseDialog} 
+          fullWidth 
+          maxWidth="md"
+          fullScreen={showPdf}
+        >
           <DialogTitle>
-            <Typography variant="h5" component="div">
-              User Details
-              <Chip
-                label={selectedUser?.userRole}
-                color="primary"
-                sx={{ ml: 2, borderRadius: 1 }}
-              />
-            </Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="h5" component="div">
+                User Details
+                <Chip
+                  label={selectedUser?.userRole}
+                  color="primary"
+                  sx={{ ml: 2, borderRadius: 1 }}
+                />
+              </Typography>
+              {showPdf && (
+                <Tooltip title="Close PDF Viewer">
+                  <IconButton onClick={() => setShowPdf(false)}>
+                    <PictureAsPdf />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
           </DialogTitle>
           <DialogContent dividers>
-            <Grid container spacing={3}>
-              {/* Common Fields */}
-              <Grid item xs={12}>
-                <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
-                  Basic Information
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-              </Grid>
-              <DialogItem label="Full Name" value={selectedUser?.fullName} />
-              <DialogItem label="Username" value={selectedUser?.username} />
-              <DialogItem label="Email" value={selectedUser?.email} />
-              <DialogItem label="Phone" value={selectedUser?.phoneNumber} />
-              <DialogItem label="Address" value={selectedUser?.address} />
-              <DialogItem
-                label="Date of Birth"
-                value={selectedUser?.dateOfBirth && new Date(selectedUser.dateOfBirth).toLocaleDateString()}
-              />
+            {showPdf && selectedUser?.ministryOfDefenceDocument ? (
+              <PdfViewer base64Data={selectedUser.ministryOfDefenceDocument} />
+            ) : (
+              <Grid container spacing={3}>
+                {/* Common Fields */}
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
+                    Basic Information
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+                <DialogItem label="Full Name" value={selectedUser?.fullName} />
+                <DialogItem label="Username" value={selectedUser?.username} />
+                <DialogItem label="Email" value={selectedUser?.email} />
+                <DialogItem label="Phone" value={selectedUser?.phoneNumber} />
+                <DialogItem label="Address" value={selectedUser?.address} />
+                <DialogItem
+                  label="Date of Birth"
+                  value={selectedUser?.dateOfBirth && new Date(selectedUser.dateOfBirth).toLocaleDateString()}
+                />
 
-              {/* Role-Specific Fields */}
-              {selectedUser && (
-                <>
-                  <Grid item xs={12} sx={{ mt: 2 }}>
-                    <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
-                      Role-Specific Information
-                    </Typography>
-                    <Divider sx={{ mb: 2 }} />
-                  </Grid>
-                  {renderRoleSpecificFields(selectedUser)}
-                </>
-              )}
+                {/* Role-Specific Fields */}
+                {selectedUser && (
+                  <>
+                    <Grid item xs={12} sx={{ mt: 2 }}>
+                      <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
+                        Role-Specific Information
+                      </Typography>
+                      <Divider sx={{ mb: 2 }} />
+                    </Grid>
+                    {renderRoleSpecificFields(selectedUser)}
+                  </>
+                )}
 
-              {/* System Information */}
-              <Grid item xs={12} sx={{ mt: 2 }}>
-                <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
-                  System Information
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
+                {/* System Information */}
+                <Grid item xs={12} sx={{ mt: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
+                    System Information
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+                <DialogItem
+                  label="Request Created"
+                  value={selectedUser?.createdAt && new Date(selectedUser.createdAt).toLocaleString()}
+                />
               </Grid>
-              <DialogItem
-                label="Request Created"
-                value={selectedUser?.createdAt && new Date(selectedUser.createdAt).toLocaleString()}
-              />
-            </Grid>
+            )}
           </DialogContent>
           <DialogActions sx={{ p: 3 }}>
             <Button
@@ -447,4 +526,4 @@ const SuperAdminDashboard = () => {
   );
 };
 
-export default SuperAdminDashboard;  
+export default SuperAdminDashboard;
